@@ -1,0 +1,9 @@
+{
+  "string": [
+    { "name": "module_desc", "value": "Copy Bubble 主模块" },
+    { "name": "EntryAbility_desc", "value": "剪贴板气泡管理器" },
+    { "name": "EntryAbility_label", "value": "Copy Bubble" },
+    { "name": "reason_float_window", "value": "用于在其他应用之上显示可拖动的复制气泡" },
+    { "name": "reason_background", "value": "用于在后台持续接收剪贴板变化" }
+  ]
+}

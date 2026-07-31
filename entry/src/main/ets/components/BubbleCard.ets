@@ -1,0 +1,144 @@
+import { ClipItem } from '../model/ClipItem';
+import { Theme, Const } from '../common/Theme';
+import { TimeUtil } from '../utils/TimeUtil';
+
+/**
+ * 一条剪贴记录。
+ * 造型上是一枚对话气泡——左下角收成尖角，像剪贴板在跟你说话；
+ * 左侧竖条用内容类型的色相着色，滚动时不读字也能分辨种类。
+ */
+@Component
+export struct BubbleCard {
+  @ObjectLink item: ClipItem;
+  onCopy: (item: ClipItem) => void = () => {};
+  onPin: (item: ClipItem) => void = () => {};
+  onOpen: (item: ClipItem) => void = () => {};
+
+  @State private pressed: boolean = false;
+
+  build() {
+    Row({ space: 0 }) {
+      // 类型色脊
+      Column()
+        .width(4)
+        .height('100%')
+        .backgroundColor(Theme.styleOf(this.item.type).tint)
+        .opacity(this.item.pinned ? 1 : 0.55)
+
+      Column({ space: 10 }) {
+        this.Header()
+        this.Body()
+        this.Footer()
+      }
+      .alignItems(HorizontalAlign.Start)
+      .layoutWeight(1)
+      .padding({ left: 14, right: 14, top: 14, bottom: 12 })
+    }
+    .alignItems(VerticalAlign.Top)
+    .width('100%')
+    .backgroundColor(Theme.CARD_BG)
+    .borderRadius({ topLeft: 20, topRight: 20, bottomRight: 20, bottomLeft: 6 })
+    .clip(true)
+    .shadow({
+      radius: this.pressed ? 6 : 14,
+      color: '#14141F14',
+      offsetX: 0,
+      offsetY: this.pressed ? 2 : 6
+    })
+    .scale({ x: this.pressed ? 0.985 : 1, y: this.pressed ? 0.985 : 1 })
+    .animation({ duration: 140, curve: Curve.FastOutSlowIn })
+    .onTouch((e: TouchEvent) => {
+      if (e.type === TouchType.Down) {
+        this.pressed = true;
+      } else if (e.type === TouchType.Up || e.type === TouchType.Cancel) {
+        this.pressed = false;
+      }
+    })
+    .onClick(() => this.onOpen(this.item))
+  }
+
+  @Builder
+  Header() {
+    Row({ space: 8 }) {
+      Row({ space: 4 }) {
+        Text(Theme.styleOf(this.item.type).glyph)
+          .fontSize(11)
+          .fontColor(Theme.styleOf(this.item.type).tint)
+        Text(Theme.styleOf(this.item.type).label)
+          .fontSize(11)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(Theme.styleOf(this.item.type).tint)
+      }
+      .padding({ left: 8, right: 8, top: 3, bottom: 3 })
+      .backgroundColor(Theme.styleOf(this.item.type).wash)
+      .borderRadius(Theme.RADIUS_CHIP)
+
+      if (this.item.pinned) {
+        Text('置顶')
+          .fontSize(11)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(Theme.PIN)
+          .padding({ left: 8, right: 8, top: 3, bottom: 3 })
+          .backgroundColor('#FDF3E0')
+          .borderRadius(Theme.RADIUS_CHIP)
+      }
+
+      Blank()
+
+      Text(TimeUtil.relative(this.item.updateTime))
+        .fontSize(11)
+        .fontColor(Theme.TEXT_3)
+    }
+    .width('100%')
+  }
+
+  @Builder
+  Body() {
+    Text(this.item.preview.length > Const.PREVIEW_LIMIT
+      ? `${this.item.preview.substring(0, Const.PREVIEW_LIMIT)}…`
+      : this.item.preview)
+      .fontSize(15)
+      .lineHeight(23)
+      .fontColor(Theme.TEXT_1)
+      .maxLines(4)
+      .textOverflow({ overflow: TextOverflow.Ellipsis })
+      .width('100%')
+      .textAlign(TextAlign.Start)
+  }
+
+  @Builder
+  Footer() {
+    Row({ space: 8 }) {
+      Text(`${this.item.charCount} 字`)
+        .fontSize(11)
+        .fontColor(Theme.TEXT_3)
+
+      if (this.item.useCount > 0) {
+        Text(`· 用过 ${this.item.useCount} 次`)
+          .fontSize(11)
+          .fontColor(Theme.TEXT_3)
+      }
+
+      Blank()
+
+      Text(this.item.pinned ? '取消置顶' : '置顶')
+        .fontSize(12)
+        .fontWeight(FontWeight.Medium)
+        .fontColor(this.item.pinned ? Theme.PIN : Theme.TEXT_2)
+        .padding({ left: 12, right: 12, top: 6, bottom: 6 })
+        .borderRadius(Theme.RADIUS_CHIP)
+        .backgroundColor('#F5F5FA')
+        .onClick(() => this.onPin(this.item))
+
+      Text('复制')
+        .fontSize(12)
+        .fontWeight(FontWeight.Medium)
+        .fontColor(Theme.BRAND)
+        .padding({ left: 12, right: 12, top: 6, bottom: 6 })
+        .borderRadius(Theme.RADIUS_CHIP)
+        .backgroundColor('#ECEEFF')
+        .onClick(() => this.onCopy(this.item))
+    }
+    .width('100%')
+  }
+}

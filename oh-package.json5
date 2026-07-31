@@ -1,0 +1,12 @@
+{
+  "modelVersion": "6.0.2",
+  "name": "copybubble",
+  "description": "Copy Bubble - 剪贴板气泡管理器",
+  "version": "1.0.0",
+  "license": "Apache-2.0",
+  "dependencies": {},
+  "devDependencies": {
+    "@ohos/hypium": "1.0.21",
+    "@ohos/hamock": "1.0.0"
+  }
+}

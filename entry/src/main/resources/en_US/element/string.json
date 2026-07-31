@@ -1,0 +1,9 @@
+{
+  "string": [
+    { "name": "module_desc", "value": "Copy Bubble main module" },
+    { "name": "EntryAbility_desc", "value": "Clipboard bubble manager" },
+    { "name": "EntryAbility_label", "value": "Copy Bubble" },
+    { "name": "reason_float_window", "value": "Show a draggable copy bubble over other apps" },
+    { "name": "reason_background", "value": "Keep receiving clipboard changes in background" }
+  ]
+}

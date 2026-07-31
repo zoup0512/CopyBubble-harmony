@@ -1,0 +1,6 @@
+# 保留 UI 描述相关命名，避免混淆破坏 ArkUI 反射
+-enable-property-obfuscation
+-enable-toplevel-obfuscation
+-keep-global-name
+  ClipItem
+  ClipItemRaw
