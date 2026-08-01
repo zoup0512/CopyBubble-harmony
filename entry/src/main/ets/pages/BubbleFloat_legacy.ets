@@ -2,7 +2,7 @@ import { promptAction } from '@kit.ArkUI';
 import { ClipItem } from '../model/ClipItem';
 import { ClipStore } from '../manager/ClipStore';
 import { ClipboardKit } from '../manager/ClipboardKit';
-import { BubbleWindow } from '../manager/BubbleWindow';
+import { BubbleWindow } from '../manager/BubbleWindow_legacy';
 import { Theme } from '../common/Theme';
 
 const COLLAPSED: number = 64;

@@ -3,6 +3,7 @@ import { ClipItem, ClipItemRaw, ClipType } from '../model/ClipItem';
 import { TypeDetector } from '../utils/TypeDetector';
 import { StorageManager } from './StorageManager';
 import { Const } from '../common/Theme';
+import { BubbleBridge } from '../bubble/BubbleBridge';
 
 const TAG: string = 'CopyBubble/Store';
 const DOMAIN: number = 0x1001;
@@ -114,6 +115,8 @@ export class ClipStore {
     this.sort();
     await this.persist();
     this.emit();
+    // 真正新增时通知气泡：触发捕获波纹并唤醒休眠中的气泡
+    BubbleBridge.notifyCaptured();
     return item;
   }
 
