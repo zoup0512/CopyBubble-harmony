@@ -4,7 +4,10 @@ import { hilog } from '@kit.PerformanceAnalysisKit';
 import { BusinessError } from '@kit.BasicServicesKit';
 import { StorageManager } from '../manager/StorageManager';
 import { ClipStore } from '../manager/ClipStore';
-import { BubbleWindow } from '../manager/BubbleWindow';
+import { ClipboardKit } from '../manager/ClipboardKit';
+import { BubbleWindowManager } from '../bubble/BubbleWindowManager';
+import { BubbleBridge, BubbleAdapter } from '../bubble/BubbleBridge';
+import { ClipItem as BubbleClipItem } from '../bubble/ClipItem';
 import { Const } from '../common/Theme';
 
 const TAG: string = 'CopyBubble/Ability';
@@ -29,6 +32,25 @@ export default class EntryAbility extends UIAbility {
       const err: BusinessError = e as BusinessError;
       hilog.error(DOMAIN, TAG, `bootstrap failed ${err.code} ${err.message}`);
     }
+
+    // 挂接气泡钩子：气泡本体不 import 业务模块，数据进出都走这里。
+    BubbleBridge.hooks = {
+      // 气泡展开时取最近几条记录，转成气泡认识的 ClipItem（类型自动识别）
+      getItems: (): BubbleClipItem[] => {
+        return ClipStore.getInstance().recent(8).map((r): BubbleClipItem =>
+          BubbleAdapter.of(r.id, r.content, r.updateTime));
+      },
+      // 用户点了面板里某条记录：写回系统剪贴板
+      onPick: (item: BubbleClipItem): void => {
+        ClipboardKit.write(item.content);
+      },
+      // 用户把气泡拖进底部吸入区隐藏了。TODO: 接常驻通知做召回入口
+      onHidden: (): void => {
+      },
+      // 停靠位置变化，不需要持久化则留空
+      onDockChange: (): void => {
+      }
+    };
 
     windowStage.loadContent('pages/Index', (err: BusinessError) => {
       if (err.code) {
@@ -86,7 +108,7 @@ export default class EntryAbility extends UIAbility {
   onDestroy(): void {
     const on: boolean = StorageManager.getInstance().getBool(Const.KEY_FLOAT_BUBBLE, false);
     if (on) {
-      BubbleWindow.hide();
+      BubbleWindowManager.get().destroy();
     }
   }
 }

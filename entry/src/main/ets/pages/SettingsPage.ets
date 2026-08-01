@@ -2,7 +2,8 @@ import { promptAction } from '@kit.ArkUI';
 import { common } from '@kit.AbilityKit';
 import { ClipStore } from '../manager/ClipStore';
 import { StorageManager } from '../manager/StorageManager';
-import { BubbleWindow } from '../manager/BubbleWindow';
+import { BubbleWindow as BubbleWindowLegacy } from '../manager/BubbleWindow_legacy';
+import { BubbleWindowManager } from '../bubble/BubbleWindowManager';
 import { Theme, Const } from '../common/Theme';
 import { SwitchRowParam, KVParam } from '../common/UiModels';
 
@@ -261,14 +262,30 @@ export struct SettingsPage {
   }
 
   private async setFloatBubble(v: boolean): Promise<void> {
+    console.info(`CopyBubble/Settings setFloatBubble v=${v}`);
     if (!v) {
       this.floatBubble = false;
       await this.sm.put(Const.KEY_FLOAT_BUBBLE, false);
-      await BubbleWindow.hide();
+      await BubbleWindowManager.get().destroy();
       return;
     }
     const ctx: common.UIAbilityContext = this.getUIContext().getHostContext() as common.UIAbilityContext;
-    const ok: boolean = await BubbleWindow.show(ctx);
+    // SYSTEM_FLOAT_WINDOW 是受限权限，未授权时 createWindow 会被系统拦下。
+    // 复用旧管理器的授权弹窗，拿到权限后再交给新管理器创建窗口。
+    const granted: boolean = await BubbleWindowLegacy.requestPermission(ctx);
+    console.info(`CopyBubble/Settings permission granted=${granted}`);
+    if (!granted) {
+      this.floatBubble = false;
+      await this.sm.put(Const.KEY_FLOAT_BUBBLE, false);
+      promptAction.showToast({
+        message: '打不开悬浮窗，需要先授予悬浮窗权限',
+        duration: 2400
+      });
+      return;
+    }
+    await BubbleWindowManager.get().create(ctx);
+    const ok: boolean = BubbleWindowManager.get().isShown();
+    console.info(`CopyBubble/Settings create done isShown=${ok}`);
     this.floatBubble = ok;
     await this.sm.put(Const.KEY_FLOAT_BUBBLE, ok);
     if (!ok) {
