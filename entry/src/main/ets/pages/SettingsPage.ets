@@ -166,7 +166,7 @@ export struct SettingsPage {
 
       Row({ space: 8 }) {
         ForEach(Const.MAX_OPTIONS, (n: number) => {
-          Text(`${n}`)
+          Text(n === Const.MAX_UNLIMITED ? '无上限' : `${n}`)
             .fontSize(14)
             .fontWeight(this.maxRecords === n ? FontWeight.Medium : FontWeight.Normal)
             .fontColor(this.maxRecords === n ? Color.White : Theme.TEXT_2)

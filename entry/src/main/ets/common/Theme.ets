@@ -62,7 +62,8 @@ export class Const {
   static readonly KEY_MAX: string = 'max_records';
   static readonly KEY_HAPTIC: string = 'haptic';
 
-  static readonly DEFAULT_MAX: number = 200;
-  static readonly MAX_OPTIONS: number[] = [50, 100, 200, 500];
+  static readonly DEFAULT_MAX: number = 100;
+  static readonly MAX_UNLIMITED: number = 0;
+  static readonly MAX_OPTIONS: number[] = [10, 50, 100, Const.MAX_UNLIMITED];
   static readonly PREVIEW_LIMIT: number = 240;
 }

@@ -117,10 +117,10 @@ export class ClipStore {
     return item;
   }
 
-  /** 超出上限时，从未置顶的旧记录里裁掉 */
+  /** 超出上限时，从未置顶的旧记录里裁掉；MAX_UNLIMITED 表示无上限 */
   private trim(): void {
     const max: number = StorageManager.getInstance().getNumber(Const.KEY_MAX, Const.DEFAULT_MAX);
-    if (this.items.length <= max) {
+    if (max === Const.MAX_UNLIMITED || this.items.length <= max) {
       return;
     }
     const pinned: ClipItem[] = this.items.filter((i: ClipItem) => i.pinned);
