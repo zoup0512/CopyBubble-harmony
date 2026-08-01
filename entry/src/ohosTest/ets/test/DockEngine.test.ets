@@ -75,33 +75,31 @@ export default function dockEngineTest() {
       expect(bottom.y + bottom.h <= H - BubbleSize.SAFE_BOTTOM).assertTrue();
     });
 
-    it('收起时窗口保持展开态并集尺寸（不缩窗，避免 displayWindowRect 滞后闪烁）', 0, () => {
+    it('视觉层窗口所有状态都铺满全屏（双窗口架构：永不 resize 避免桌面闪烁）', 0, () => {
       const e: DockEngine = new DockEngine(W, H);
       const bx: number = e.restX(DockSide.Right);
-      const docked: Rect = e.windowRect(DockState.Docked, DockSide.Right, bx, 300, 3);
-      const expanded: Rect = e.windowRect(DockState.Expanded, DockSide.Right, bx, 300, 3);
-      // 收起与展开共用同一矩形：窗口尺寸跨状态不变 → ArkUI displayWindowRect
-      // 不滞后 → 气泡坐标恒定，关闭面板不闪（代价：收起态窗口区域拦截触摸）。
-      expect(docked.w).assertEqual(expanded.w);
-      expect(docked.h).assertEqual(expanded.h);
-      expect(docked.x).assertEqual(expanded.x);
-      expect(docked.y).assertEqual(expanded.y);
+      const states: DockState[] = [
+        DockState.Free, DockState.Snapping, DockState.Docked, DockState.Dozing, DockState.Expanded
+      ];
+      // 双窗口架构：视觉层全屏、不可触摸（触摸穿透），永不 resize（resize 会让 WMS
+      // 重建 surface，中间帧覆盖整屏 = 桌面闪）。所有状态都返回整屏矩形。
+      for (const s of states) {
+        const r: Rect = e.windowRect(s, DockSide.Right, bx, 300, 3);
+        expect(r.x).assertEqual(0);
+        expect(r.y).assertEqual(0);
+        expect(r.w).assertEqual(W);
+        expect(r.h).assertEqual(H);
+      }
     });
 
-    it('拖拽时窗口铺满，避免手指移出小窗断触', 0, () => {
+    it('交互层窗口覆盖气泡触控热区，跟随气泡移动', 0, () => {
       const e: DockEngine = new DockEngine(W, H);
-      const r: Rect = e.windowRect(DockState.Free, DockSide.Right, 120, 300, 3);
-      expect(r.w).assertEqual(W);
-      expect(r.h).assertEqual(H);
-    });
-
-    it('展开时窗口覆盖气泡与面板的并集', 0, () => {
-      const e: DockEngine = new DockEngine(W, H);
-      const bx: number = e.restX(DockSide.Right);
-      const a: PanelAnchor = e.panelAnchor(DockSide.Right, bx, 300, 3);
-      const r: Rect = e.windowRect(DockState.Expanded, DockSide.Right, bx, 300, 3);
-      expect(r.x <= a.x).assertTrue();
-      expect(r.x + r.w >= bx + BubbleSize.BUBBLE).assertTrue();
+      // 交互层只 move 不 resize，恒为 HIT_AREA×HIT_AREA，左上角对齐气泡
+      const r: Rect = e.touchRect(120, 300);
+      expect(r.x).assertEqual(120);
+      expect(r.y).assertEqual(300);
+      expect(r.w).assertEqual(BubbleSize.HIT_AREA);
+      expect(r.h).assertEqual(BubbleSize.HIT_AREA);
     });
 
     it('底部中央为隐藏吸入区，其他位置不触发', 0, () => {

@@ -2,6 +2,7 @@
   "src": [
     "pages/Index",
     "pages/BubbleWindowPage",
+    "pages/BubbleTouchPage",
     "pages/BubblePreviewPage"
   ]
 }

@@ -15,9 +15,8 @@
 
 import { curves } from '@kit.ArkUI';
 import { hilog } from '@kit.PerformanceAnalysisKit';
-import { BubbleColor, BubbleMotion, BubbleShape, BubbleSize } from './BubbleTokens';
+import { BubbleColor, BubbleMotion, BubbleSize } from './BubbleTokens';
 import { DockEngine, DockSide, DockState, PanelAnchor, Rect } from './DockEngine';
-import { BubbleBadge, BubbleIcon } from './BubbleIcon';
 import { ClipboardPanel } from './ClipboardPanel';
 import { ClipItem } from './ClipItem';
 import { AppKeys } from './AppKeys';
@@ -39,8 +38,26 @@ export struct FloatBubble {
   /** 外部召回：置 false 即让隐藏的气泡回来 */
   @StorageLink(AppKeys.BUBBLE_HIDDEN) @Watch('onHiddenFlag') hiddenFlag: boolean = false;
 
+  /* ---- 交互层 → 视觉层信号（双窗口架构）---- */
+  // 交互层窗口（BubbleTouchPage）捕获手势后，把气泡坐标/手势状态写进 AppStorage，
+  // 视觉层（本组件）读这些值渲染气泡。两个窗口是独立 UI 实例，只能靠 AppStorage 通信。
+  /** 气泡横坐标 vp。交互层拖拽时写，本组件读以定位气泡 */
+  @StorageLink(AppKeys.BUBBLE_X) @Watch('onBubblePos') sigX: number = 0;
+  /** 气泡纵坐标 vp */
+  @StorageLink(AppKeys.BUBBLE_Y) @Watch('onBubblePos') sigY: number = 240;
+  /** 拖拽中？拖拽结束时（true→false）触发吸附归位 settle() */
+  @StorageLink(AppKeys.BUBBLE_DRAGGING) @Watch('onDraggingChange') sigDragging: boolean = false;
+  /** 点击信号，每 +1 一次，触发 handleTap（开/关面板）*/
+  @StorageLink(AppKeys.BUBBLE_TAP) @Watch('onTapSignal') sigTap: number = 0;
+  /** 是否进入隐藏吸入区（视觉层高亮提示用）*/
+  @StorageLink(AppKeys.BUBBLE_DISMISS_ARMED) sigDismissArmed: boolean = false;
+  /** 是否显示底部吸入区提示 */
+  @StorageLink(AppKeys.BUBBLE_DISMISS_VISIBLE) sigDismissVisible: boolean = false;
+
   /** 窗口矩形变化回调，宿主据此 resize / move 悬浮窗 */
   onWindowRectChange: (r: Rect) => void = () => {};
+  /** 视觉层可触摸性切换回调：面板展开时需临时开触摸接收行点击 */
+  onViewTouchableChange: (touchable: boolean) => void = () => {};
   onPick: (item: ClipItem) => void = () => {};
   onHidden: () => void = () => {};
   onDockChange: (side: DockSide, y: number) => void = () => {};
@@ -52,35 +69,21 @@ export struct FloatBubble {
   @State private dragging: boolean = false;
   @State private pulseScale: number = 1;
   @State private pulseAlpha: number = 0;
-  @State private dismissArmed: boolean = false;
-  @State private dismissVisible: boolean = false;
   @State private panelShown: boolean = false;
   @State private anchor: PanelAnchor =
     { x: 0, y: 0, w: BubbleSize.PANEL_W, h: 120, originX: 1, originY: 0.5 };
-  // 当前悬浮窗左上角的屏幕坐标。组件内部用「屏幕坐标 - 窗口原点」得到
-  // 相对父容器的偏移。
-  // 设计：收起与展开共用同一「并集矩形」（见 DockEngine.windowRect），原点
-  // 恒为并集左上角（贴右时约 (92,193)），气泡相对坐标恒为 (restX-92, …)，
-  // 窗口不 resize → ArkUI displayWindowRect 不滞后 → 气泡坐标永不跳变。
-  // 拖拽态窗口铺满全屏，原点恒为 (0,0)，气泡用绝对屏幕坐标。
-  @State private winX: number = 0;
-  @State private winY: number = 0;
+  // 气泡外观渲染在交互层窗口（BubbleTouchPage）。视觉层不再渲染气泡本体，
+  // 只渲染面板和 dismissZone。低频状态（停靠侧、状态、条数、波纹）通过
+  // syncBubbleVisual() 写 AppStorage 同步给交互层渲染气泡外观。
+  // 视觉层窗口常驻全屏（见 DockEngine.windowRect），左上角恒为屏幕原点 (0,0)，
+  // 气泡/面板直接用屏幕绝对坐标定位，无需窗口原点换算。
 
   private engine: DockEngine = new DockEngine(360, 780);
   private dozeTimer: number = -1;
   private panelTimer: number = -1;
-  private dragOriginX: number = 0;
-  private dragOriginY: number = 0;
-  // 拖拽位移用「逐帧增量累加」计算，并丢弃单帧巨变。
-  // 原因：拖拽开始时窗口从并集（~282×142）扩到全屏，窗口原点搬动会让
-  // PanGesture 的 offsetX/offsetY 在某一帧瞬间跳变（正好等于原点位移）。
-  // 真实手指每帧只有几到几十 vp，用阈值过滤掉这一帧跳变即可。
-  private dragAccX: number = 0;
-  private dragAccY: number = 0;
-  private dragPrevOffX: number = 0;
-  private dragPrevOffY: number = 0;
-  // 单帧位移超过此值视为窗口 resize 跳变，丢弃。真实手指单帧位移远小于此。
-  private static readonly DRAG_STEP_LIMIT: number = 80;
+  // 视觉层主动写 sigX/sigY（吸附/唤醒/休眠动画）时置 true，阻止 onBubblePos 把
+  // 刚写的值又回写到 this.x，与正在进行的动画互相覆盖导致闪烁。
+  private syncingToTouch: boolean = false;
 
   aboutToAppear(): void {
     this.engine.updateScreen(this.hostW, this.hostH);
@@ -90,11 +93,26 @@ export struct FloatBubble {
     const savedY: number = AppStorage.get<number>(AppKeys.LAST_Y) ?? 240;
     this.y = this.engine.clampY(savedY);
     this.x = this.engine.restX(this.side);
+    // 同步给交互层（BubbleTouchPage 也读 AppKeys.BUBBLE_X/Y 定位自身窗口）
+    this.sigX = this.x;
+    this.sigY = this.y;
+    // 初始化交互层渲染气泡所需的状态信号
+    AppStorage.setOrCreate(AppKeys.BUBBLE_DARK, this.dark);
+    this.syncBubbleVisual();
     hilog.info(DOMAIN, TAG,
       `aboutToAppear host=${this.hostW}x${this.hostH} screen=${this.engine.getScreenW()}x${this.engine.getScreenH()} ` +
       `side=${this.side} x=${this.x} y=${this.y}`);
     this.emitRect();
     this.scheduleDoze();
+  }
+
+  /** 把气泡外观相关状态同步给交互层（BubbleTouchPage 据此渲染气泡） */
+  private syncBubbleVisual(): void {
+    AppStorage.setOrCreate(AppKeys.BUBBLE_STATE, this.state);
+    AppStorage.setOrCreate(AppKeys.BUBBLE_SIDE, this.side);
+    AppStorage.setOrCreate(AppKeys.BUBBLE_ITEM_COUNT, this.items.length);
+    AppStorage.setOrCreate(AppKeys.BUBBLE_PULSE_SCALE, this.pulseScale);
+    AppStorage.setOrCreate(AppKeys.BUBBLE_PULSE_ALPHA, this.pulseAlpha);
   }
 
   aboutToDisappear(): void {
@@ -120,6 +138,7 @@ export struct FloatBubble {
       this.pulseScale = BubbleMotion.SCALE_PULSE_TO;
       this.pulseAlpha = 0;
     });
+    this.syncBubbleVisual();
   }
 
   private onHiddenFlag(): void {
@@ -129,13 +148,59 @@ export struct FloatBubble {
     }
   }
 
-  /* ---------------- 状态机 ---------------- */
+  /* ---- 交互层 → 视觉层 信号响应（双窗口架构）---- */
 
-  private isDockedShape(): boolean {
-    return this.state === DockState.Docked ||
-      this.state === DockState.Dozing ||
-      this.state === DockState.Expanded;
+  /**
+   * 交互层拖拽时把气泡坐标写进 AppStorage。视觉层跟踪 this.x/y 用于面板锚点
+   * 计算和 settle，但不再据此渲染气泡（气泡外观在交互层窗口，跟窗口原生移动）。
+   * syncingToTouch 守卫：视觉层动画主动写 sigX/sigY 时跳过回写。
+   */
+  private onBubblePos(): void {
+    if (this.syncingToTouch) {
+      return;
+    }
+    this.x = this.sigX;
+    this.y = this.sigY;
   }
+
+  /** 拖拽开始（true）/ 结束（false） */
+  private onDraggingChange(): void {
+    if (this.sigDragging) {
+      // 拖拽开始：进入自由态，面板收起
+      clearTimeout(this.dozeTimer);
+      this.state = DockState.Free;
+      this.panelShown = false;
+      this.dragging = true;
+      this.syncBubbleVisual();
+      hilog.info(DOMAIN, TAG, `drag START (signal) pos=(${this.sigX},${this.sigY})`);
+    } else if (this.state === DockState.Free) {
+      // 拖拽结束：吸附归位
+      this.dragging = false;
+      this.x = this.sigX;
+      this.y = this.sigY;
+      this.syncBubbleVisual();
+      hilog.info(DOMAIN, TAG, `drag END (signal) pos=(${this.x},${this.y}) dismissArmed=${this.sigDismissArmed}`);
+      if (this.sigDismissArmed) {
+        this.hideBubble();
+        return;
+      }
+      this.settle();
+    }
+  }
+
+  /** 点击信号：交互层 TapGesture 每 +1 一次 */
+  private onTapSignal(): void {
+    if (this.sigTap <= 0) {
+      return;
+    }
+    if (this.dragging || this.state === DockState.Free) {
+      return; // 拖拽中的 up 不算点击
+    }
+    hilog.info(DOMAIN, TAG, `tap (signal) state=${this.state}`);
+    this.handleTap();
+  }
+
+  /* ---------------- 状态机 ---------------- */
 
   /** 抬手后决定吸附侧并弹簧归位 */
   private settle(): void {
@@ -144,12 +209,16 @@ export struct FloatBubble {
     this.state = DockState.Snapping;
     hilog.info(DOMAIN, TAG,
       `settle from=(${this.x},${this.y}) -> side=${this.side} restX=${this.engine.restX(this.side)} y=${this.y}`);
+    // 动画期间主动写 sigX/sigY 同步给交互层，置 syncingToTouch 阻止 onBubblePos
+    // 回写 this.x（否则动画值与信号值互相覆盖 = 闪烁）。动画结束后复位。
+    this.syncingToTouch = true;
     animateTo({
       curve: curves.interpolatingSpring(
         BubbleMotion.SPRING_VELOCITY, BubbleMotion.SPRING_MASS,
         BubbleMotion.SPRING_STIFFNESS, BubbleMotion.SPRING_DAMPING)
     }, () => {
       this.x = this.engine.restX(this.side);
+      this.sigX = this.x;
       this.state = DockState.Docked;
     });
     AppStorage.setOrCreate(AppKeys.LAST_SIDE, this.side === DockSide.Left ? 'L' : 'R');
@@ -157,6 +226,8 @@ export struct FloatBubble {
     this.onDockChange(this.side, this.y);
     this.emitRect();
     this.scheduleDoze();
+    this.syncingToTouch = false;
+    this.syncBubbleVisual();
   }
 
   private scheduleDoze(): void {
@@ -169,10 +240,14 @@ export struct FloatBubble {
       if (this.state !== DockState.Docked) {
         return;
       }
+      this.syncingToTouch = true;
       animateTo({ duration: BubbleMotion.DOZE_DURATION, curve: Curve.EaseOut }, () => {
         this.x = this.engine.dozeX(this.side);
+        this.sigX = this.x;
         this.state = DockState.Dozing;
       });
+      this.syncingToTouch = false;
+      this.syncBubbleVisual();
       hilog.info(DOMAIN, TAG, `scheduleDoze: -> Dozing x=${this.engine.dozeX(this.side)}`);
       this.emitRect();
     }, BubbleMotion.DOZE_DELAY);
@@ -180,10 +255,14 @@ export struct FloatBubble {
 
   private wake(): void {
     if (this.state === DockState.Dozing) {
+      this.syncingToTouch = true;
       animateTo({ duration: BubbleMotion.WAKE_DURATION, curve: Curve.EaseOut }, () => {
         this.x = this.engine.restX(this.side);
+        this.sigX = this.x;
         this.state = DockState.Docked;
       });
+      this.syncingToTouch = false;
+      this.syncBubbleVisual();
       this.emitRect();
     }
     this.scheduleDoze();
@@ -193,9 +272,15 @@ export struct FloatBubble {
     clearTimeout(this.dozeTimer);
     this.anchor = this.engine.panelAnchor(this.side, this.x, this.y, this.items.length);
     this.state = DockState.Expanded;
+    this.syncingToTouch = true;
     this.x = this.engine.restX(this.side);
+    this.sigX = this.x;
+    this.syncingToTouch = false;
+    this.syncBubbleVisual();
     this.emitRect();
-    // 窗口先扩，下一帧再播动画，否则面板会被旧窗口边界裁掉
+    // 面板展开期间，视觉层需临时可触摸以接收面板行点击（此前不可触摸以便下层穿透）。
+    // 面板是短暂模态，此期间不要求下层可点，可接受。
+    this.onViewTouchableChange(true);
     clearTimeout(this.panelTimer);
     this.panelTimer = setTimeout(() => {
       this.panelShown = true;
@@ -204,12 +289,12 @@ export struct FloatBubble {
 
   private closePanel(): void {
     this.panelShown = false;
+    this.onViewTouchableChange(false);
     clearTimeout(this.panelTimer);
     this.panelTimer = setTimeout(() => {
-      // 收起与展开共用同一窗口矩形（见 DockEngine.windowRect），这里只切
-      // state 移除面板。窗口不 resize，displayWindowRect 不滞后，气泡坐标
-      // 恒定 → 不闪。
+      // 双窗口架构：视觉层恒全屏不 resize，这里只切 state 移除面板。
       this.state = DockState.Docked;
+      this.syncBubbleVisual();
       this.emitRect();
       this.scheduleDoze();
     }, BubbleMotion.MORPH_DURATION);
@@ -223,6 +308,7 @@ export struct FloatBubble {
     }, () => {
       this.state = DockState.Hidden;
     });
+    this.syncBubbleVisual();
     AppStorage.setOrCreate(AppKeys.BUBBLE_HIDDEN, true);
     this.onHidden();
   }
@@ -230,12 +316,9 @@ export struct FloatBubble {
   private emitRect(): void {
     const r: Rect = this.engine.windowRect(
       this.state, this.side, this.x, this.y, this.items.length);
-    // 记下窗口原点，build() 里把气泡/面板的屏幕坐标换算成相对窗口的坐标。
-    // 收起态窗口原点 = 气泡左上角，所以 (x - winX, y - winY) = (0,0)。
-    this.winX = r.x;
-    this.winY = r.y;
+    // 视觉层窗口常驻全屏，r 恒为 (0,0,screenW,screenH)；applyRect 内部会去重跳过。
     hilog.info(DOMAIN, TAG,
-      `emitRect state=${this.state} side=${this.side} bubble=(${this.x},${this.y}) -> rect=(${r.x},${r.y},${r.w}x${r.h}) win=(${this.winX},${this.winY}) rel=(${this.x - this.winX},${this.y - this.winY})`);
+      `emitRect state=${this.state} side=${this.side} bubble=(${this.x},${this.y}) -> rect=(${r.x},${r.y},${r.w}x${r.h})`);
     this.onWindowRectChange(r);
   }
 
@@ -251,146 +334,10 @@ export struct FloatBubble {
     }
   }
 
-  private accessibilityLabel(): string {
-    return `剪贴板，${this.items.length} 条记录`;
-  }
-
   /* ---------------- 视图 ---------------- */
 
-  @Builder
-  bubbleView() {
-    Stack({ alignContent: Alignment.Center }) {
-      // 捕获波纹
-      Circle()
-        .width(BubbleSize.BUBBLE)
-        .height(BubbleSize.BUBBLE)
-        .fill(Color.Transparent)
-        .stroke(BubbleColor.PULSE)
-        .strokeWidth(2)
-        .scale({ x: this.pulseScale, y: this.pulseScale })
-        .opacity(this.pulseAlpha)
-        .hitTestBehavior(HitTestMode.None)
-
-      // 气泡本体
-      Stack({ alignContent: Alignment.Center }) {
-        BubbleIcon({
-          scaleRatio: 1,
-          ghostVisible: this.state !== DockState.Dozing,
-          shiftX: this.isDockedShape()
-            ? (this.side === DockSide.Left
-              ? BubbleShape.DOCK_GLYPH_SHIFT
-              : -BubbleShape.DOCK_GLYPH_SHIFT)
-            : 0
-        })
-      }
-      .width(BubbleSize.BUBBLE)
-      .height(BubbleSize.BUBBLE)
-      .linearGradient({
-        angle: 150,
-        colors: [[BubbleColor.GRAD_A, 0], [BubbleColor.GRAD_B, 0.52], [BubbleColor.GRAD_C, 1]]
-      })
-      // 贴边即形变：只保留朝向屏幕内侧的圆角
-      .borderRadius(this.isDockedShape()
-        ? (this.side === DockSide.Left
-          ? {
-              topLeft: 0, bottomLeft: 0,
-              topRight: BubbleShape.BUBBLE_RADIUS, bottomRight: BubbleShape.BUBBLE_RADIUS
-            }
-          : {
-              topLeft: BubbleShape.BUBBLE_RADIUS, bottomLeft: BubbleShape.BUBBLE_RADIUS,
-              topRight: 0, bottomRight: 0
-            })
-        : BubbleShape.BUBBLE_RADIUS)
-      // 深色应用底上靠 1vp 内描边保住轮廓
-      .border({ width: 1, color: BubbleColor.RIM })
-      // 拖拽期间换成静态阴影，不参与动画，避免掉帧
-      .shadow(this.dragging
-        ? { radius: 30, color: '#D90A0E32', offsetX: 0, offsetY: 16 }
-        : { radius: 20, color: '#B8141A50', offsetX: 0, offsetY: 8 })
-      .animation({
-        duration: BubbleMotion.MORPH_DURATION,
-        curve: curves.cubicBezierCurve(0.3, 0.9, 0.3, 1)
-      })
-
-      // 角标：贴右侧时移到左上角，否则数字会被藏进屏幕外
-      BubbleBadge({
-        count: this.items.length,
-        onLeft: this.side === DockSide.Right,
-        visible: this.state !== DockState.Dozing && this.items.length > 0
-      })
-        .position(this.side === DockSide.Right
-          ? { x: -3, y: -3 }
-          : { x: BubbleSize.BUBBLE - 13, y: -3 })
-    }
-    // 触控热区恒为 48×48，不随视觉露出收缩
-    .width(BubbleSize.HIT_AREA)
-    .height(BubbleSize.HIT_AREA)
-    .opacity(this.state === DockState.Dozing
-      ? BubbleMotion.OPACITY_DOZING : BubbleMotion.OPACITY_DOCKED)
-    .scale(this.dragging
-      ? { x: BubbleMotion.SCALE_DRAG, y: BubbleMotion.SCALE_DRAG }
-      : { x: 1, y: 1 })
-    .position({ x: this.x - this.winX, y: this.y - this.winY })
-    .visibility(this.state === DockState.Hidden ? Visibility.Hidden : Visibility.Visible)
-    // 贴边与休眠只是视觉状态，读屏文案恒定
-    .accessibilityLevel('yes')
-    .accessibilityText(this.accessibilityLabel())
-    .gesture(
-      GestureGroup(GestureMode.Exclusive,
-        PanGesture({ fingers: 1, distance: 3 })
-          .onActionStart((e: GestureEvent) => {
-            clearTimeout(this.dozeTimer);
-            this.dragOriginX = this.x;
-            this.dragOriginY = this.y;
-            this.dragAccX = 0;
-            this.dragAccY = 0;
-            this.dragPrevOffX = e.offsetX;
-            this.dragPrevOffY = e.offsetY;
-            this.dragging = true;
-            this.state = DockState.Free;
-            this.panelShown = false;
-            hilog.info(DOMAIN, TAG,
-              `drag START origin=(${this.dragOriginX},${this.dragOriginY}) off=(${e.offsetX},${e.offsetY}) screen=${this.engine.getScreenW()}x${this.engine.getScreenH()}`);
-            this.emitRect();
-          })
-          .onActionUpdate((e: GestureEvent) => {
-            // 逐帧增量累加位移。onActionStart 里 emitRect 把窗口从 48×48 扩到全屏，
-            // 窗口原点搬动会让本帧的 offsetX/Y 瞬间跳变 ~300vp。真实手指单帧位移小，
-            // 用 DRAG_STEP_LIMIT 阈值丢弃这一帧跳变，累加值就不会被污染。
-            const stepX: number = e.offsetX - this.dragPrevOffX;
-            const stepY: number = e.offsetY - this.dragPrevOffY;
-            if (Math.abs(stepX) < FloatBubble.DRAG_STEP_LIMIT) {
-              this.dragAccX += stepX;
-            }
-            if (Math.abs(stepY) < FloatBubble.DRAG_STEP_LIMIT) {
-              this.dragAccY += stepY;
-            }
-            this.dragPrevOffX = e.offsetX;
-            this.dragPrevOffY = e.offsetY;
-            this.x = this.engine.clampDragX(this.dragOriginX + this.dragAccX);
-            this.y = this.engine.clampDragY(this.dragOriginY + this.dragAccY);
-            this.dismissVisible = true;
-            this.dismissArmed = this.engine.inDismissZone(this.x, this.y);
-            hilog.info(DOMAIN, TAG,
-              `drag UPDATE step=(${stepX},${stepY}) acc=(${this.dragAccX},${this.dragAccY}) -> (${this.x},${this.y}) dismiss=${this.dismissArmed}`);
-          })
-          .onActionEnd(() => {
-            hilog.info(DOMAIN, TAG,
-              `drag END at (${this.x},${this.y}) acc=(${this.dragAccX},${this.dragAccY}) dismissArmed=${this.dismissArmed}`);
-            this.dragging = false;
-            this.dismissVisible = false;
-            if (this.dismissArmed) {
-              this.dismissArmed = false;
-              this.hideBubble();
-              return;
-            }
-            this.settle();
-          }),
-        TapGesture({ count: 1 })
-          .onAction(() => this.handleTap())
-      )
-    )
-  }
+  // 气泡本体（bubbleView）已移到交互层窗口（BubbleTouchPage）渲染。
+  // 视觉层只保留面板和 dismissZone。
 
   @Builder
   dismissZone() {
@@ -401,10 +348,10 @@ export struct FloatBubble {
     }
     .padding({ left: 16, right: 16, top: 9, bottom: 9 })
     .borderRadius(100)
-    .backgroundColor(this.dismissArmed ? BubbleColor.DISMISS : '#DB080C1B')
+    .backgroundColor(this.sigDismissArmed ? BubbleColor.DISMISS : '#DB080C1B')
     .border({ width: 1, color: '#59FF6B7A' })
-    .scale({ x: this.dismissArmed ? 1.1 : 1, y: this.dismissArmed ? 1.1 : 1 })
-    .opacity(this.dismissVisible ? 1 : 0)
+    .scale({ x: this.sigDismissArmed ? 1.1 : 1, y: this.sigDismissArmed ? 1.1 : 1 })
+    .opacity(this.sigDismissVisible ? 1 : 0)
     .animation({ duration: 220, curve: curves.cubicBezierCurve(0.2, 0.9, 0.3, 1.2) })
     .hitTestBehavior(HitTestMode.None)
   }
@@ -430,12 +377,13 @@ export struct FloatBubble {
             this.closePanel();
           }
         })
-          .position({ x: this.anchor.x - this.winX, y: this.anchor.y - this.winY })
+          .position({ x: this.anchor.x, y: this.anchor.y })
       }
 
-      this.bubbleView()
+      // 气泡本体不在这里渲染——它在交互层窗口（BubbleTouchPage）里，跟窗口原生移动。
+      // 视觉层只渲染面板和 dismissZone（低频更新的内容）。
 
-      if (this.dismissVisible) {
+      if (this.sigDismissVisible) {
         Column() {
           this.dismissZone()
         }

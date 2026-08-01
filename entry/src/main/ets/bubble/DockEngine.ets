@@ -170,32 +170,30 @@ export class DockEngine {
   }
 
   /**
-   * 悬浮窗需要覆盖的矩形。
+   * 视觉层窗口需要覆盖的矩形。
    *
-   * 设计约束（9 轮日志 + ArkUI 行为确认）：窗口 resize 会让 ArkUI 内部
-   * displayWindowRect 滞后一帧，子组件（气泡）会被画在旧坐标系上闪一下。
-   * 应用层无论怎么对齐时序都无法消除（已逐一验证）。因此：
-   *   Docked/Dozing/Expanded 三态共用【同一个】展开态并集矩形 —— 窗口尺寸
-   *   在收起与展开之间完全不变，displayWindowRect 永不滞后，气泡坐标恒定。
-   * 代价：收起态窗口变大（282×142），该区域会拦截下层应用触摸（TYPE_FLOAT
-   *   窗口触摸是整窗级的，无法按区域穿透）。这是换取"关闭不闪"的取舍。
-   * 拖拽（Free/Snapping）仍铺满全屏，否则手指移出小窗就断触。
+   * 双窗口架构（见 BubbleWindowManager）：视觉层是「全屏、不可触摸」的纯渲染层，
+   * 交互层是「48×48、可触摸」的手势层。两者都【只 move、永不 resize】——
+   * resize 会让 WMS 重建 surface，中间帧覆盖整屏 = 桌面闪一下（应用层无法消除，
+   * 已多轮日志验证）。所以视觉层恒为全屏，创建时 apply 一次即可。
+   *
+   * 视觉层不可触摸（setWindowTouchable(false)），触摸整窗穿透到下层 app；
+   * 交互层只有气泡那么大，跟随气泡 move，下层 app 在气泡之外完全可点。
    */
   windowRect(state: DockState, side: DockSide, bubbleX: number, bubbleY: number,
     itemCount: number): Rect {
-    if (state === DockState.Free || state === DockState.Snapping) {
-      // 拖拽期间窗口铺满，否则手指移出小窗就断触
-      return { x: 0, y: 0, w: this.screenW, h: this.screenH };
-    }
-    // 收起/展开共用展开态并集：窗口原点恒定，气泡相对坐标 (x - winX) 恒为
-    // restX - unionLeft，永不跳变。
-    const a: PanelAnchor = this.panelAnchor(side, bubbleX, bubbleY, itemCount);
-    const bx: number = this.restX(side);
-    const left: number = Math.min(a.x, bx);
-    const top: number = Math.min(a.y, bubbleY);
-    const right: number = Math.max(a.x + a.w, bx + BubbleSize.BUBBLE);
-    const bottom: number = Math.max(a.y + a.h, bubbleY + BubbleSize.BUBBLE);
-    return { x: left, y: top, w: right - left, h: bottom - top };
+    // 恒定全屏。视觉层只在 create 时 apply 一次，之后永不 resize → 永不闪。
+    return { x: 0, y: 0, w: this.screenW, h: this.screenH };
+  }
+
+  /**
+   * 交互层窗口的矩形：覆盖气泡触控热区（HIT_AREA×HIT_AREA）。
+   * 交互层只 move 不 resize，跟随气泡移动；尺寸恒定，因此无 surface 重建、不闪。
+   * 窗口左上角对齐气泡热区左上角 (bubbleX, bubbleY)。
+   */
+  touchRect(bubbleX: number, bubbleY: number): Rect {
+    const s: number = BubbleSize.HIT_AREA;
+    return { x: bubbleX, y: bubbleY, w: s, h: s };
   }
 
   /** 横竖屏切换后按旧比例还原纵向位置，side 保持不变 */

@@ -78,6 +78,9 @@ struct BubbleWindowPage {
         onWindowRectChange: (r: Rect) => {
           this.mgr.applyRect(r);
         },
+        onViewTouchableChange: (touchable: boolean) => {
+          this.mgr.setViewTouchable(touchable);
+        },
         onPick: (item: ClipItem) => {
           BubbleBridge.hooks.onPick(item);
         },
