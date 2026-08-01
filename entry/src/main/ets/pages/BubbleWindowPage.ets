@@ -6,7 +6,7 @@
  * 不 import 你项目里的任何模块。
  */
 
-import { window } from '@kit.ArkUI';
+import { promptAction, window } from '@kit.ArkUI';
 import { BusinessError } from '@kit.BasicServicesKit';
 import { FloatBubble } from '../bubble/FloatBubble';
 import { BubbleWindowManager } from '../bubble/BubbleWindowManager';
@@ -83,9 +83,15 @@ struct BubbleWindowPage {
         },
         onPick: (item: ClipItem) => {
           BubbleBridge.hooks.onPick(item);
+          promptAction.showToast({ message: '已复制', duration: 1500 });
         },
         onHidden: () => {
           BubbleBridge.hooks.onHidden();
+        },
+        onClose: () => {
+          // 彻底关闭：销毁双窗口，再走 hook 落库关闭状态
+          this.mgr.destroy();
+          BubbleBridge.hooks.onClose();
         },
         onDockChange: (side: DockSide, y: number) => {
           BubbleBridge.hooks.onDockChange(side, y);

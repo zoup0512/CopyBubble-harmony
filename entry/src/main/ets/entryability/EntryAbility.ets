@@ -8,6 +8,7 @@ import { ClipboardKit } from '../manager/ClipboardKit';
 import { BubbleWindowManager } from '../bubble/BubbleWindowManager';
 import { BubbleBridge, BubbleAdapter } from '../bubble/BubbleBridge';
 import { ClipItem as BubbleClipItem } from '../bubble/ClipItem';
+import { AppKeys } from '../bubble/AppKeys';
 import { Const } from '../common/Theme';
 
 const TAG: string = 'CopyBubble/Ability';
@@ -46,6 +47,11 @@ export default class EntryAbility extends UIAbility {
       },
       // 用户把气泡拖进底部吸入区隐藏了。TODO: 接常驻通知做召回入口
       onHidden: (): void => {
+      },
+      // 用户在面板里拨开关彻底关闭了悬浮球：落库 + 写 AppStorage 触发设置页开关实时变 OFF
+      onClose: (): void => {
+        StorageManager.getInstance().put(Const.KEY_FLOAT_BUBBLE, false);
+        AppStorage.setOrCreate(AppKeys.BUBBLE_RUNNING, false);
       },
       // 停靠位置变化，不需要持久化则留空
       onDockChange: (): void => {

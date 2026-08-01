@@ -17,6 +17,10 @@
  *     onHidden: () => MyNotify.showRecall(),
  *     onDockChange: (side, y) => MySettings.saveDock(side, y)
  *   };
+ *
+ *   // 用户在面板里拨开关彻底关闭了悬浮球：通常持久化关闭状态。
+ *   // 窗口销毁由宿主页执行，本钩子只负责业务副作用（如落库）。
+ *   BubbleBridge.hooks.onClose = () => MySettings.setFloatBubble(false);
  */
 
 import { ClipItem, ClipKind, ClipUtil } from './ClipItem';
@@ -29,6 +33,8 @@ export interface BubbleHooks {
   onPick: (item: ClipItem) => void;
   /** 用户把气泡拖进底部吸入区隐藏了。你需要提供一个召回入口。 */
   onHidden: () => void;
+  /** 用户在面板里拨开关彻底关闭了悬浮球。通常持久化关闭状态。 */
+  onClose: () => void;
   /** 气泡停靠位置变了，可用于持久化。 */
   onDockChange: (side: DockSide, y: number) => void;
 }
@@ -44,6 +50,10 @@ class DefaultHooks implements BubbleHooks {
 
   onHidden(): void {
     console.info('CopyBubble hidden');
+  }
+
+  onClose(): void {
+    console.info('CopyBubble closed');
   }
 
   onDockChange(side: DockSide, y: number): void {

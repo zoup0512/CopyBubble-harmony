@@ -60,6 +60,8 @@ export struct FloatBubble {
   onViewTouchableChange: (touchable: boolean) => void = () => {};
   onPick: (item: ClipItem) => void = () => {};
   onHidden: () => void = () => {};
+  /** 面板开关拨到 OFF：彻底关闭悬浮球（销毁双窗口） */
+  onClose: () => void = () => {};
   onDockChange: (side: DockSide, y: number) => void = () => {};
 
   @State private state: DockState = DockState.Docked;
@@ -342,9 +344,6 @@ export struct FloatBubble {
   @Builder
   dismissZone() {
     Row({ space: 8 }) {
-      Text('松手隐藏气泡')
-        .fontSize(12)
-        .fontColor('#EEF1FA')
     }
     .padding({ left: 16, right: 16, top: 9, bottom: 9 })
     .borderRadius(100)
@@ -358,7 +357,7 @@ export struct FloatBubble {
 
   build() {
     Stack({ alignContent: Alignment.TopStart }) {
-      // 面板外任意点击即收起。不放关闭按钮，少一个可点击目标就少一次误触。
+      // 面板外任意点击即收起。header 右侧开关用于彻底关闭悬浮球。
       if (this.state === DockState.Expanded) {
         Row()
           .width('100%')
@@ -375,6 +374,9 @@ export struct FloatBubble {
           onPick: (item: ClipItem) => {
             this.onPick(item);
             this.closePanel();
+          },
+          onClose: () => {
+            this.onClose();
           }
         })
           .position({ x: this.anchor.x, y: this.anchor.y })

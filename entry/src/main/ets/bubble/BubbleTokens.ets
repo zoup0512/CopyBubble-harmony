@@ -63,6 +63,10 @@ export class BubbleColor {
   static readonly PANEL_TEXT: string = '#242A48';
   static readonly PANEL_TEXT_DARK: string = '#DCE1F2';
   static readonly PANEL_SUB: string = '#8A93B2';
+  /** 选中行背景（浅色面板） */
+  static readonly PANEL_ROW_SEL_LIGHT: string = '#295B6CF6';
+  /** 选中行背景（深色面板） */
+  static readonly PANEL_ROW_SEL_DARK: string = '#3D5B6CF6';
 
   static readonly TAG_LINK_BG: string = '#295B6CF6';
   static readonly TAG_LINK_FG: string = '#3E4BD4';

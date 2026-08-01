@@ -2,8 +2,8 @@
  * ClipboardPanel.ets
  * 展开后的剪贴板面板。
  *
- * 刻意不放关闭按钮：面板外任意点击或返回手势即可收起，
- * 少一个可点击目标，就少一次误触。
+ * 面板外任意点击或返回手势即可收起；header 右侧的开关用于彻底关闭悬浮球，
+ * 开关是刻意手势，误触概率比按钮低。
  */
 
 import { curves } from '@kit.ArkUI';
@@ -21,6 +21,11 @@ export struct ClipboardPanel {
 
   onPick: (item: ClipItem) => void = () => {};
   onClear: () => void = () => {};
+  /** header 右侧开关转 OFF 时彻底关闭悬浮球 */
+  onClose: () => void = () => {};
+
+  /** 最近一次点选的记录 id，用于高亮选中行 */
+  @State private selectedId: string = '';
 
   @Builder
   itemRow(item: ClipItem) {
@@ -55,7 +60,13 @@ export struct ClipboardPanel {
     .height(BubbleSize.ITEM_H)
     .padding({ left: 8, right: 8 })
     .borderRadius(12)
-    .onClick(() => this.onPick(item))
+    .backgroundColor(this.selectedId === item.id
+      ? (this.dark ? BubbleColor.PANEL_ROW_SEL_DARK : BubbleColor.PANEL_ROW_SEL_LIGHT)
+      : Color.Transparent)
+    .onClick(() => {
+      this.selectedId = item.id;
+      this.onPick(item);
+    })
   }
 
   @Builder
@@ -81,14 +92,20 @@ export struct ClipboardPanel {
           .fontColor(BubbleColor.PANEL_SUB)
           .letterSpacing(1.2)
         Blank()
-        Text(this.items.length > 0 ? `${this.items.length} 条` : '空')
-          .fontSize(10)
-          .fontColor(BubbleColor.PANEL_SUB)
-          .onClick(() => {
-            if (this.items.length > 0) {
-              this.onClear();
-            }
-          })
+        Row({ space: 5 }) {
+          Text('关闭悬浮气泡')
+            .fontSize(10)
+            .fontColor(BubbleColor.PANEL_SUB)
+          // 彻底关闭悬浮球。打开时 ON，拨到 OFF 即销毁双窗口。
+          Toggle({ type: ToggleType.Switch, isOn: true })
+            .selectedColor(BubbleColor.GRAD_A)
+            .scale({ x: 0.85, y: 0.85 })
+            .onChange((isOn: boolean) => {
+              if (!isOn) {
+                this.onClose();
+              }
+            })
+        }
       }
       .width('100%')
       .height(BubbleSize.PANEL_HEAD_H)

@@ -6,6 +6,7 @@ import { BubbleWindow as BubbleWindowLegacy } from '../manager/BubbleWindow_lega
 import { BubbleWindowManager } from '../bubble/BubbleWindowManager';
 import { Theme, Const } from '../common/Theme';
 import { SwitchRowParam, KVParam } from '../common/UiModels';
+import { AppKeys } from '../bubble/AppKeys';
 
 @Component
 export struct SettingsPage {
@@ -13,7 +14,9 @@ export struct SettingsPage {
   @StorageLink('topInset') topInset: number = 0;
 
   @State private autoCapture: boolean = false;
-  @State private floatBubble: boolean = false;
+  // @StorageLink 绑 AppKeys.BUBBLE_RUNNING：气泡内拨开关关闭时写 AppStorage，
+  // 设置页能实时收到 OFF；落盘值在 aboutToAppear 里灌进 AppStorage 作为初值。
+  @StorageLink(AppKeys.BUBBLE_RUNNING) floatBubble: boolean = false;
   @State private dedupe: boolean = true;
   @State private haptic: boolean = true;
   @State private maxRecords: number = Const.DEFAULT_MAX;
@@ -23,6 +26,7 @@ export struct SettingsPage {
 
   aboutToAppear(): void {
     this.autoCapture = this.sm.getBool(Const.KEY_AUTO_CAPTURE, false);
+    // 落盘值是唯一真相源：每次进设置页用偏好值刷新 AppStorage，覆盖上次进程残留。
     this.floatBubble = this.sm.getBool(Const.KEY_FLOAT_BUBBLE, false);
     this.dedupe = this.sm.getBool(Const.KEY_DEDUPE, true);
     this.haptic = this.sm.getBool(Const.KEY_HAPTIC, true);

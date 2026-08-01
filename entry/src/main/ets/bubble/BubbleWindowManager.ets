@@ -23,6 +23,7 @@ import { common } from '@kit.AbilityKit';
 import { display, window } from '@kit.ArkUI';
 import { BusinessError } from '@kit.BasicServicesKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
+import { AppKeys } from './AppKeys';
 import { Rect } from './DockEngine';
 
 const TAG: string = 'CopyBubble/Window';
@@ -115,6 +116,8 @@ export class BubbleWindowManager {
       await tw.showWindow();
 
       this.shown = true;
+      // 同步给 AppStorage：设置页 @StorageLink(BUBBLE_RUNNING) 据此显示开关状态
+      AppStorage.setOrCreate(AppKeys.BUBBLE_RUNNING, true);
       hilog.info(DOMAIN, TAG, 'create: done, shown=true');
     } catch (e) {
       const err: BusinessError = e as BusinessError;
@@ -249,6 +252,8 @@ export class BubbleWindowManager {
       this.viewWin = undefined;
     }
     this.shown = false;
+    // 销毁后同步：设置页开关据此变 OFF（与 onClose hook 的写入互补，覆盖所有销毁入口）
+    AppStorage.setOrCreate(AppKeys.BUBBLE_RUNNING, false);
   }
 
   isShown(): boolean {
