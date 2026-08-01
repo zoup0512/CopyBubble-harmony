@@ -8,6 +8,7 @@ import { BubbleCard } from '../components/BubbleCard';
 import { SearchField } from '../components/SearchField';
 import { CategoryStrip } from '../components/CategoryStrip';
 import { EmptyState } from '../components/EmptyState';
+import { CategoryCounts } from '../common/UiModels';
 
 @Component
 export struct HomeView {
@@ -19,7 +20,7 @@ export struct HomeView {
   @State private list: ClipItem[] = [];
   @State private keyword: string = '';
   @State private category: string = 'all';
-  @State private counts: Map<string, number> = new Map<string, number>();
+  @State private counts: CategoryCounts = new CategoryCounts();
   @State private stats: StoreStats = new StoreStats();
   @State private showCompose: boolean = false;
   @State private draft: string = '';
@@ -48,9 +49,12 @@ export struct HomeView {
 
   private refresh(): void {
     this.list = this.store.query(this.category, this.keyword);
-    const map: Map<string, number> = new Map<string, number>();
-    this.categories.forEach((c: Category) => map.set(c.key, this.store.countOf(c.key)));
-    this.counts = map;
+    // 必须整体换引用，而不是对旧对象做 map.set：CategoryCounts 内部用 Map，
+    // 而 @Observed 只能感知一级属性的赋值变化，Map.set() 的改动不会通知到
+    // @ObjectLink 的 CategoryStrip，分类按钮上的数字会卡住不刷新（清空后尤为明显）。
+    const next: CategoryCounts = new CategoryCounts();
+    this.categories.forEach((c: Category) => next.set(c.key, this.store.countOf(c.key)));
+    this.counts = next;
     this.stats = this.store.stats();
   }
 
@@ -223,7 +227,9 @@ export struct HomeView {
             .fontColor(Theme.TEXT_3)
             .width('100%')
             .textAlign(TextAlign.Center)
-            .padding({ top: 8, bottom: 120 })
+            // 底部留白需随安全区动态计算，确保「到底了」不被悬浮操作坞遮挡：
+            // 操作坞高度 = 按钮高 52 + 坞内边距 20 + bottomInset，再加 16 间隙
+            .padding({ top: 8, bottom: this.bottomInset + 88 })
         }
       }
       .layoutWeight(1)

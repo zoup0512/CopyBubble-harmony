@@ -17,26 +17,19 @@ export struct BubbleCard {
   @State private pressed: boolean = false;
 
   build() {
-    Row({ space: 0 }) {
-      // 类型色脊
-      Column()
-        .width(4)
-        .height('100%')
-        .backgroundColor(Theme.styleOf(this.item.type).tint)
-        .opacity(this.item.pinned ? 1 : 0.55)
-
-      Column({ space: 10 }) {
-        this.Header()
-        this.Body()
-        this.Footer()
-      }
-      .alignItems(HorizontalAlign.Start)
-      .layoutWeight(1)
-      .padding({ left: 14, right: 14, top: 14, bottom: 12 })
+    Column({ space: 10 }) {
+      this.Header()
+      this.Body()
+      this.Footer()
     }
-    .alignItems(VerticalAlign.Top)
+    .alignItems(HorizontalAlign.Start)
     .width('100%')
+    .padding({ left: 14, right: 14, top: 14, bottom: 12 })
     .backgroundColor(Theme.CARD_BG)
+    .border({
+      width: { left: 4 },
+      color: { left: Theme.styleOf(this.item.type).tint }
+    })
     .borderRadius({ topLeft: 20, topRight: 20, bottomRight: 20, bottomLeft: 6 })
     .clip(true)
     .shadow({

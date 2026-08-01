@@ -32,6 +32,26 @@ export class BubbleWindow {
     return BubbleWindow.win !== null;
   }
 
+  /** 窗口左上角 x（px）。拖动计算增量时读这个，避免每帧从 0 起步导致跳屏。 */
+  static get posX(): number {
+    return BubbleWindow.x;
+  }
+
+  /** 窗口左上角 y（px）。 */
+  static get posY(): number {
+    return BubbleWindow.y;
+  }
+
+  /** 窗口宽（px）。拖动增量要按窗口尺寸算，展开/收起态下都正确。 */
+  static get width(): number {
+    return BubbleWindow.w;
+  }
+
+  /** 窗口高（px）。 */
+  static get height(): number {
+    return BubbleWindow.h;
+  }
+
   /** 悬浮窗权限是否已授予。SYSTEM_FLOAT_WINDOW 是受限的 user_grant 权限。 */
   static hasPermission(): boolean {
     try {

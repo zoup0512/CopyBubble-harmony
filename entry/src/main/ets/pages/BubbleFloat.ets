@@ -22,6 +22,13 @@ struct BubbleFloat {
   private store: ClipStore = ClipStore.getInstance();
   private onStoreChange: () => void = () => { this.recent = this.store.recent(8); };
 
+  // 拖动相关。originX/Y 记下手势开始时窗口的位置，dragged 标记是否真拖动了，
+  // 用来在 Up 时区分「点一下展开」和「拖完松手」。
+  private originX: number = 0;
+  private originY: number = 0;
+  private dragged: boolean = false;
+  private readonly DRAG_SLOP: number = 8;
+
   aboutToAppear(): void {
     this.store.subscribe(this.onStoreChange);
     this.store.load();
@@ -61,7 +68,30 @@ struct BubbleFloat {
     }
     .width(COLLAPSED)
     .height(COLLAPSED)
-    .onClick(() => this.expand())
+    // 点击与拖动并存：轻点展开，按住拖动换位。
+    .parallelGesture(
+      PanGesture()
+        .onActionStart(() => {
+          this.originX = BubbleWindow.posX;
+          this.originY = BubbleWindow.posY;
+          this.dragged = false;
+        })
+        .onActionUpdate((e: GestureEvent) => {
+          // offsetX/Y 是相对手势起点的累计偏移（单位 vp），换算成 px 加到起点上。
+          if (Math.abs(e.offsetX) > this.DRAG_SLOP || Math.abs(e.offsetY) > this.DRAG_SLOP) {
+            this.dragged = true;
+          }
+          BubbleWindow.moveTo(this.originX + vp2px(e.offsetX), this.originY + vp2px(e.offsetY));
+        })
+    )
+    .onClick(() => {
+      // 拖完之后的那次 Up 会被误判成点击，这里跳过。
+      if (this.dragged) {
+        this.dragged = false;
+        return;
+      }
+      this.expand();
+    })
   }
 
   @Builder

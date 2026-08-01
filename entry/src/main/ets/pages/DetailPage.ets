@@ -18,6 +18,7 @@ const DOMAIN: number = 0x1001;
 @Component
 export struct DetailPage {
   @Consume('nav') pathStack: NavPathStack;
+  @StorageLink('topInset') topInset: number = 0;
   itemId: string = '';
 
   @State private item: ClipItem | null = null;
@@ -98,7 +99,7 @@ export struct DetailPage {
       }
     }
     .width('100%')
-    .padding({ left: 8, right: 12, top: 8, bottom: 8 })
+    .padding({ left: 8, right: 12, top: this.topInset + 8, bottom: 8 })
     .alignItems(VerticalAlign.Center)
   }
 

@@ -9,6 +9,7 @@ import { SwitchRowParam, KVParam } from '../common/UiModels';
 @Component
 export struct SettingsPage {
   @Consume('nav') pathStack: NavPathStack;
+  @StorageLink('topInset') topInset: number = 0;
 
   @State private autoCapture: boolean = false;
   @State private floatBubble: boolean = false;
@@ -109,7 +110,7 @@ export struct SettingsPage {
         .layoutWeight(1)
     }
     .width('100%')
-    .padding({ left: 8, right: 12, top: 8, bottom: 8 })
+    .padding({ left: 8, right: 12, top: this.topInset + 8, bottom: 8 })
   }
 
   @Builder
@@ -224,8 +225,7 @@ export struct SettingsPage {
   AboutCard() {
     Column({ space: 8 }) {
       this.KV({ key: '应用', value: 'Copy Bubble 1.0.0' })
-      this.KV({ key: '包名', value: 'com.razor.tools.copybubble' })
-      this.KV({ key: 'Target SDK', value: '6.1.1(24)' })
+      this.KV({ key: 'Harmony API', value: '6.1.1(24)' })
       this.KV({ key: '数据存放', value: '仅在本机，不联网上传' })
     }
     .width('100%')

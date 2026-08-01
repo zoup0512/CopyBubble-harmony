@@ -1,11 +1,14 @@
 import { Category } from '../model/ClipItem';
 import { Theme } from '../common/Theme';
+import { CategoryCounts } from '../common/UiModels';
 
 @Component
 export struct CategoryStrip {
   @Prop categories: Category[];
   @Link selected: string;
-  @Prop counts: Map<string, number>;
+  // @ObjectLink 监听 @Observed 对象的属性级变化，配合父组件「改 value 而非换引用」，
+  // 计数变化才能可靠地传进来。原来用 @Prop Map 时 value 变化不会触发重渲染。
+  @ObjectLink counts: CategoryCounts;
 
   build() {
     Scroll() {
@@ -29,7 +32,7 @@ export struct CategoryStrip {
         .fontSize(13)
         .fontWeight(this.selected === c.key ? FontWeight.Medium : FontWeight.Normal)
         .fontColor(this.selected === c.key ? Color.White : Theme.TEXT_2)
-      Text(`${this.counts.get(c.key) ?? 0}`)
+      Text(`${this.counts.get(c.key)}`)
         .fontSize(11)
         .fontColor(this.selected === c.key ? '#D8DCFF' : Theme.TEXT_3)
     }
