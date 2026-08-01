@@ -227,20 +227,14 @@ export struct HomeView {
 
   @Builder
   TopBar() {
-    Column({ space: 4 }) {
+    Column({ space: 6 }) {
       Row() {
-        Column({ space: 2 }) {
-          Text(I18n.t('app_title'))
-            .fontSize(26)
-            .fontWeight(FontWeight.Bold)
-            .fontColor(Theme.TEXT_1)
-            .letterSpacing(-0.3)
-          Text(I18n.f('stats_summary', `${this.stats.total}`, `${this.stats.today}`, `${this.stats.pinned}`))
-            .fontSize(12)
-            .fontColor(Theme.TEXT_2)
-        }
-        .alignItems(HorizontalAlign.Start)
-        .layoutWeight(1)
+        Text(I18n.t('app_title'))
+          .fontSize(26)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(Theme.TEXT_1)
+          .letterSpacing(-0.3)
+          .layoutWeight(1)
 
         Text('⚙')
           .fontSize(20)
@@ -254,8 +248,14 @@ export struct HomeView {
       }
       .width('100%')
       .alignItems(VerticalAlign.Center)
+
+      Text(I18n.f('stats_summary', `${this.stats.total}`, `${this.stats.today}`, `${this.stats.pinned}`))
+        .fontSize(12)
+        .fontColor(Theme.TEXT_2)
+        .width('100%')
     }
     .width('100%')
+    .alignItems(HorizontalAlign.Start)
     .padding({
       left: Theme.PAGE_PAD,
       right: Theme.PAGE_PAD,
