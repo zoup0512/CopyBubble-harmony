@@ -21,6 +21,7 @@ export class I18n {
 
     // ---------- 首页 ----------
     ['app_title', '随手贴'],
+    ['app_name', '随手贴'],
     ['stats_summary', '共 {0} 条 · 今天新增 {1} · 置顶 {2}'],
     ['empty_no_match_title', '没有匹配的内容'],
     ['empty_no_match_hint', '换个关键词试试，或者清空搜索框'],
@@ -173,6 +174,7 @@ export class I18n {
 
     // ---------- Home ----------
     ['app_title', 'Copy Bubble'],
+    ['app_name', 'Copy Bubble'],
     ['stats_summary', '{0} total · {1} today · {2} pinned'],
     ['empty_no_match_title', 'No matches'],
     ['empty_no_match_hint', 'Try another keyword or clear the search box'],

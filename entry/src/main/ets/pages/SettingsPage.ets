@@ -230,7 +230,7 @@ export struct SettingsPage {
   @Builder
   AboutCard() {
     Column({ space: 8 }) {
-      this.KV({ key: I18n.t('about_app'), value: 'Copy Bubble 1.0.0' })
+      this.KV({ key: I18n.t('about_app'), value: `${I18n.t('app_name')} 1.0.0` })
       this.KV({ key: 'Harmony API', value: '6.1.1(24)' })
       this.KV({ key: I18n.t('about_storage'), value: I18n.t('about_storage_value') })
     }

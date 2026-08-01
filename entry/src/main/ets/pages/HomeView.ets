@@ -227,7 +227,7 @@ export struct HomeView {
 
   @Builder
   TopBar() {
-    Column({ space: 6 }) {
+    Column({ space: 10 }) {
       Row() {
         Text(I18n.t('app_title'))
           .fontSize(26)
@@ -242,8 +242,6 @@ export struct HomeView {
           .width(40)
           .height(40)
           .textAlign(TextAlign.Center)
-          .backgroundColor(Theme.CARD_BG)
-          .borderRadius(14)
           .onClick(() => this.pathStack.pushPathByName('settings', new NavParam('')))
       }
       .width('100%')
@@ -260,7 +258,7 @@ export struct HomeView {
       left: Theme.PAGE_PAD,
       right: Theme.PAGE_PAD,
       top: this.topInset + 12,
-      bottom: 14
+      bottom: 6
     })
   }
 
