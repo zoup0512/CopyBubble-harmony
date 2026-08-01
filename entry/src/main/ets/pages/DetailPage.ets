@@ -11,6 +11,7 @@ import { Theme } from '../common/Theme';
 import { ActionRowParam } from '../common/UiModels';
 import { TimeUtil } from '../utils/TimeUtil';
 import { TypeDetector } from '../utils/TypeDetector';
+import { I18n } from '../common/I18n';
 
 const TAG: string = 'CopyBubble/Detail';
 const DOMAIN: number = 0x1001;
@@ -40,7 +41,7 @@ export struct DetailPage {
         this.Bar()
         if (this.item === null) {
           Column() {
-            Text('这条记录已经不在了')
+            Text(I18n.t('detail_gone'))
               .fontSize(14)
               .fontColor(Theme.TEXT_2)
           }
@@ -83,14 +84,14 @@ export struct DetailPage {
         .textAlign(TextAlign.Center)
         .onClick(() => this.pathStack.pop())
 
-      Text('详情')
+      Text(I18n.t('detail_title'))
         .fontSize(17)
         .fontWeight(FontWeight.Medium)
         .fontColor(Theme.TEXT_1)
         .layoutWeight(1)
 
       if (this.item !== null) {
-        Text(this.editing ? '完成' : '编辑')
+        Text(this.editing ? I18n.t('btn_done') : I18n.t('btn_edit'))
           .fontSize(14)
           .fontWeight(FontWeight.Medium)
           .fontColor(Theme.BRAND)
@@ -114,13 +115,13 @@ export struct DetailPage {
           .backgroundColor(Theme.styleOf(this.item.type).wash)
           .borderRadius(Theme.RADIUS_CHIP)
 
-        Text(`${this.item.charCount} 字`)
+        Text(I18n.f('char_count', `${this.item.charCount}`))
           .fontSize(12)
           .fontColor(Theme.TEXT_2)
 
         Blank()
 
-        Text(this.item.pinned ? '★ 已置顶' : '☆ 置顶')
+        Text(this.item.pinned ? I18n.t('pinned_badge') : I18n.t('pin_badge'))
           .fontSize(12)
           .fontColor(this.item.pinned ? Theme.PIN : Theme.TEXT_2)
           .padding({ left: 10, right: 10, top: 5, bottom: 5 })
@@ -159,7 +160,7 @@ export struct DetailPage {
         Divider().color(Theme.DIVIDER)
 
         Row() {
-          Text(`收录于 ${TimeUtil.full(this.item.createTime)}`)
+          Text(I18n.f('collected_at', TimeUtil.full(this.item.createTime)))
             .fontSize(11)
             .fontColor(Theme.TEXT_3)
           Blank()
@@ -181,15 +182,15 @@ export struct DetailPage {
     if (this.item !== null) {
       Column({ space: 8 }) {
         this.ActionRow({
-          title: '复制全文',
-          sub: '把这条内容写回系统剪贴板',
+          title: I18n.t('action_copy_all'),
+          sub: I18n.t('action_copy_all_sub'),
           color: Theme.BRAND,
           action: () => this.doCopy()
         })
 
         if (this.item.type === ClipType.LINK) {
           this.ActionRow({
-            title: '用浏览器打开',
+            title: I18n.t('action_open_browser'),
             sub: TypeDetector.extractUrl(this.item.content),
             color: '#0F9D8F',
             action: () => this.openUri(this.linkTarget())
@@ -197,7 +198,7 @@ export struct DetailPage {
         }
         if (this.item.type === ClipType.PHONE) {
           this.ActionRow({
-            title: '拨号',
+            title: I18n.t('action_dial'),
             sub: this.item.content,
             color: '#D97706',
             action: () => this.openUri(this.telTarget())
@@ -205,7 +206,7 @@ export struct DetailPage {
         }
         if (this.item.type === ClipType.EMAIL) {
           this.ActionRow({
-            title: '写邮件',
+            title: I18n.t('action_email'),
             sub: this.item.content,
             color: '#DB2777',
             action: () => this.openUri(this.mailTarget())
@@ -213,7 +214,7 @@ export struct DetailPage {
         }
         if (this.item.type === ClipType.CODE) {
           this.ActionRow({
-            title: '只复制数字',
+            title: I18n.t('action_copy_code'),
             sub: TypeDetector.extractCode(this.item.content),
             color: '#7A5CE8',
             action: () => this.copyCode()
@@ -221,8 +222,8 @@ export struct DetailPage {
         }
 
         this.ActionRow({
-          title: '分享',
-          sub: '发送到其他应用',
+          title: I18n.t('action_share'),
+          sub: I18n.t('action_share_sub'),
           color: Theme.TEXT_2,
           action: () => this.doShare()
         })
@@ -263,7 +264,7 @@ export struct DetailPage {
 
   @Builder
   DangerZone() {
-    Text('删除这条记录')
+    Text(I18n.t('delete_record'))
       .fontSize(14)
       .fontColor(Theme.DANGER)
       .width('100%')
@@ -284,7 +285,7 @@ export struct DetailPage {
         this.item = this.store.getById(this.itemId);
       }
       this.editing = false;
-      promptAction.showToast({ message: '已保存' });
+      promptAction.showToast({ message: I18n.t('toast_saved') });
     } else {
       this.editing = true;
     }
@@ -327,23 +328,23 @@ export struct DetailPage {
 
   private async copyText(text: string): Promise<void> {
     if (text.length === 0) {
-      promptAction.showToast({ message: '没有可复制的内容' });
+      promptAction.showToast({ message: I18n.t('toast_no_copy_content') });
       return;
     }
     const ok: boolean = await ClipboardKit.write(text);
-    promptAction.showToast({ message: ok ? '已复制到剪贴板' : '复制失败，请重试' });
+    promptAction.showToast({ message: ok ? I18n.t('toast_copied') : I18n.t('toast_copy_failed') });
   }
 
   private openUri(uri: string): void {
     if (uri.length === 0) {
-      promptAction.showToast({ message: '没有找到可打开的地址' });
+      promptAction.showToast({ message: I18n.t('toast_no_uri') });
       return;
     }
     const ctx: common.UIAbilityContext = this.getUIContext().getHostContext() as common.UIAbilityContext;
     const want: Want = { action: 'ohos.want.action.viewData', uri: uri };
     ctx.startAbility(want).catch((e: BusinessError) => {
       hilog.error(DOMAIN, TAG, `startAbility failed ${e.code}`);
-      promptAction.showToast({ message: '没有应用可以打开它' });
+      promptAction.showToast({ message: I18n.t('toast_no_app_open') });
     });
   }
 
@@ -365,17 +366,17 @@ export struct DetailPage {
     } catch (e) {
       const err: BusinessError = e as BusinessError;
       hilog.error(DOMAIN, TAG, `share failed ${err.code}`);
-      promptAction.showToast({ message: '分享面板打不开' });
+      promptAction.showToast({ message: I18n.t('toast_share_failed') });
     }
   }
 
   private confirmDelete(): void {
     promptAction.showDialog({
-      title: '删除这条记录',
-      message: '删掉之后没法恢复。',
+      title: I18n.t('delete_record'),
+      message: I18n.t('delete_confirm_msg'),
       buttons: [
-        { text: '取消', color: Theme.TEXT_2 },
-        { text: '删除', color: Theme.DANGER }
+        { text: I18n.t('btn_cancel'), color: Theme.TEXT_2 },
+        { text: I18n.t('btn_delete'), color: Theme.DANGER }
       ]
     }).then(async (res: promptAction.ShowDialogSuccessResponse) => {
       if (res.index === 1 && this.item !== null) {

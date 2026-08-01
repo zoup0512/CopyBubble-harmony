@@ -1,9 +1,10 @@
 import { Theme } from '../common/Theme';
+import { I18n } from '../common/I18n';
 
 @Component
 export struct EmptyState {
-  @Prop title: string = '还没有记录';
-  @Prop hint: string = '复制点什么，然后回到这里';
+  @Prop title: string = I18n.t('empty_default_title');
+  @Prop hint: string = I18n.t('empty_default_hint');
 
   build() {
     Column({ space: 10 }) {

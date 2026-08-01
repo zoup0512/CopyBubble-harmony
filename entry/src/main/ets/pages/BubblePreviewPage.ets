@@ -9,6 +9,7 @@ import { FloatBubble } from '../bubble/FloatBubble';
 import { DockSide, Rect } from '../bubble/DockEngine';
 import { ClipItem, ClipKind, ClipUtil } from '../bubble/ClipItem';
 import { AppKeys } from '../bubble/AppKeys';
+import { I18n } from '../common/I18n';
 
 @Entry
 @Component
@@ -25,7 +26,7 @@ struct BubblePreviewPage {
   @Builder
   fakeApp() {
     Column({ space: 11 }) {
-      Text('某篇正在阅读的长文')
+      Text(I18n.t('preview_article'))
         .fontSize(17)
         .fontWeight(FontWeight.Bold)
         .fontColor(this.dark ? '#C4CBE4' : '#2A3050')
@@ -57,7 +58,7 @@ struct BubblePreviewPage {
       .width('100%')
 
       Row({ space: 8 }) {
-        Button('模拟一次复制')
+        Button(I18n.t('preview_simulate_copy'))
           .fontSize(12)
           .height(32)
           .backgroundColor('#5B6CF6')
@@ -73,7 +74,7 @@ struct BubblePreviewPage {
             this.pulse = this.pulse + 1;
           })
 
-        Button(this.dark ? '浅色应用底' : '深色应用底')
+        Button(this.dark ? I18n.t('preview_light_bg') : I18n.t('preview_dark_bg'))
           .fontSize(12)
           .height(32)
           .backgroundColor('#2A31A8')
@@ -82,7 +83,7 @@ struct BubblePreviewPage {
           })
 
         if (this.hidden) {
-          Button('召回')
+          Button(I18n.t('preview_recall'))
             .fontSize(12)
             .height(32)
             .backgroundColor('#0F8D79')
@@ -112,7 +113,7 @@ struct BubblePreviewPage {
 
       // 返回入口
       Row() {
-        Text('返回')
+        Text(I18n.t('preview_back'))
           .fontSize(14)
           .fontColor(this.dark ? '#8D97BE' : '#5F6A94')
           .onClick(() => router.back())

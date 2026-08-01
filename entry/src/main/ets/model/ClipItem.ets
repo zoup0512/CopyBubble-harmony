@@ -3,6 +3,8 @@
  * bundleName: com.razor.tools.copybubble
  */
 
+import { I18n } from '../common/I18n';
+
 /** 剪贴内容类型 */
 export enum ClipType {
   TEXT = 'text',
@@ -85,7 +87,7 @@ export class ClipItem {
 /** 分类筛选项 */
 export class Category {
   key: string = 'all';
-  label: string = '全部';
+  label: string = '';
 
   constructor(key: string, label: string) {
     this.key = key;
@@ -93,15 +95,18 @@ export class Category {
   }
 }
 
-export const CATEGORIES: Category[] = [
-  new Category('all', '全部'),
-  new Category('pinned', '置顶'),
-  new Category(ClipType.LINK as string, '链接'),
-  new Category(ClipType.CODE as string, '验证码'),
-  new Category(ClipType.PHONE as string, '电话'),
-  new Category(ClipType.EMAIL as string, '邮箱'),
-  new Category(ClipType.TEXT as string, '文本')
-];
+/** 取分类列表，label 按当前语言解析。需在 I18n.init() 之后调。 */
+export function getCategories(): Category[] {
+  return [
+    new Category('all', I18n.t('cat_all')),
+    new Category('pinned', I18n.t('cat_pinned')),
+    new Category(ClipType.LINK as string, I18n.t('type_link')),
+    new Category(ClipType.CODE as string, I18n.t('type_code')),
+    new Category(ClipType.PHONE as string, I18n.t('type_phone')),
+    new Category(ClipType.EMAIL as string, I18n.t('type_email')),
+    new Category(ClipType.TEXT as string, I18n.t('type_text'))
+  ];
+}
 
 /** 路由参数：ArkTS 的 navDestination 只接受 object，不能直接塞字符串 */
 export class NavParam {

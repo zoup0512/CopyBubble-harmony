@@ -1,4 +1,5 @@
 import { ClipType } from '../model/ClipItem';
+import { I18n } from './I18n';
 
 /** 每种内容类型的视觉标识 */
 export class TypeStyle {
@@ -9,6 +10,21 @@ export class TypeStyle {
 
   constructor(label: string, glyph: string, tint: string, wash: string) {
     this.label = label;
+    this.glyph = glyph;
+    this.tint = tint;
+    this.wash = wash;
+  }
+}
+
+/** 每种类型的样式条目：i18n key + glyph + tint + wash */
+class StyleEntry {
+  key: string = '';
+  glyph: string = '';
+  tint: string = '';
+  wash: string = '';
+
+  constructor(key: string, glyph: string, tint: string, wash: string) {
+    this.key = key;
     this.glyph = glyph;
     this.tint = tint;
     this.wash = wash;
@@ -36,19 +52,22 @@ export class Theme {
   static readonly GAP: number = 12;
   static readonly PAGE_PAD: number = 16;
 
-  private static readonly STYLES: Map<string, TypeStyle> = new Map<string, TypeStyle>([
-    [ClipType.TEXT as string, new TypeStyle('文本', '✎', '#4C5BD4', '#ECEEFF')],
-    [ClipType.LINK as string, new TypeStyle('链接', '⛓', '#0F9D8F', '#E3F6F3')],
-    [ClipType.PHONE as string, new TypeStyle('电话', '☎', '#D97706', '#FDF0DC')],
-    [ClipType.EMAIL as string, new TypeStyle('邮箱', '✉', '#DB2777', '#FCE7F2')],
-    [ClipType.CODE as string, new TypeStyle('验证码', '＃', '#7A5CE8', '#F0EBFF')],
-    [ClipType.NUMBER as string, new TypeStyle('数字', '№', '#2563EB', '#E4EDFE')],
-    [ClipType.ADDRESS as string, new TypeStyle('地址', '⌖', '#059669', '#E2F5EE')]
+  private static readonly STYLES: Map<string, StyleEntry> = new Map<string, StyleEntry>([
+    [ClipType.TEXT as string, new StyleEntry('type_text', '✎', '#4C5BD4', '#ECEEFF')],
+    [ClipType.LINK as string, new StyleEntry('type_link', '⛓', '#0F9D8F', '#E3F6F3')],
+    [ClipType.PHONE as string, new StyleEntry('type_phone', '☎', '#D97706', '#FDF0DC')],
+    [ClipType.EMAIL as string, new StyleEntry('type_email', '✉', '#DB2777', '#FCE7F2')],
+    [ClipType.CODE as string, new StyleEntry('type_code', '＃', '#7A5CE8', '#F0EBFF')],
+    [ClipType.NUMBER as string, new StyleEntry('type_number', '№', '#2563EB', '#E4EDFE')],
+    [ClipType.ADDRESS as string, new StyleEntry('type_address', '⌖', '#059669', '#E2F5EE')]
   ]);
 
   static styleOf(type: ClipType): TypeStyle {
-    const s: TypeStyle | undefined = Theme.STYLES.get(type as string);
-    return s !== undefined ? s : new TypeStyle('文本', '✎', Theme.BRAND, '#ECEEFF');
+    const e: StyleEntry | undefined = Theme.STYLES.get(type as string);
+    if (e === undefined) {
+      return new TypeStyle(I18n.t('type_text'), '✎', Theme.BRAND, '#ECEEFF');
+    }
+    return new TypeStyle(I18n.t(e.key), e.glyph, e.tint, e.wash);
   }
 }
 

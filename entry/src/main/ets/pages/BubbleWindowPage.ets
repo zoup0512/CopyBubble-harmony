@@ -15,6 +15,7 @@ import { DockSide, Rect } from '../bubble/DockEngine';
 import { ClipItem } from '../bubble/ClipItem';
 import { AppKeys } from '../bubble/AppKeys';
 import { BubbleSize } from '../bubble/BubbleTokens';
+import { I18n } from '../common/I18n';
 
 @Entry
 @Component
@@ -83,7 +84,7 @@ struct BubbleWindowPage {
         },
         onPick: (item: ClipItem) => {
           BubbleBridge.hooks.onPick(item);
-          promptAction.showToast({ message: '已复制', duration: 1500 });
+          promptAction.showToast({ message: I18n.t('toast_copied_short'), duration: 1500 });
         },
         onHidden: () => {
           BubbleBridge.hooks.onHidden();

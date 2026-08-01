@@ -10,6 +10,7 @@ import { BubbleBridge, BubbleAdapter } from '../bubble/BubbleBridge';
 import { ClipItem as BubbleClipItem } from '../bubble/ClipItem';
 import { AppKeys } from '../bubble/AppKeys';
 import { Const } from '../common/Theme';
+import { I18n } from '../common/I18n';
 
 const TAG: string = 'CopyBubble/Ability';
 const DOMAIN: number = 0x1001;
@@ -19,6 +20,7 @@ export default class EntryAbility extends UIAbility {
 
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
     hilog.info(DOMAIN, TAG, 'onCreate');
+    I18n.init();
     AppStorage.setOrCreate('foregroundTick', 0);
     AppStorage.setOrCreate('topInset', 0);
     AppStorage.setOrCreate('bottomInset', 0);

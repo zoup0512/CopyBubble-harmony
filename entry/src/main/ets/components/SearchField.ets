@@ -1,10 +1,12 @@
 import { Theme } from '../common/Theme';
+import { I18n } from '../common/I18n';
 
 @Component
 export struct SearchField {
   @Link keyword: string;
   @State private focused: boolean = false;
   private controller: TextInputController = new TextInputController();
+  private placeholder: string = I18n.t('search_placeholder');
 
   build() {
     Row({ space: 8 }) {
@@ -12,7 +14,7 @@ export struct SearchField {
         .fontSize(18)
         .fontColor(this.focused ? Theme.BRAND : Theme.TEXT_3)
 
-      TextInput({ text: $$this.keyword, placeholder: '搜索剪贴内容', controller: this.controller })
+      TextInput({ text: $$this.keyword, placeholder: this.placeholder, controller: this.controller })
         .placeholderColor(Theme.TEXT_3)
         .placeholderFont({ size: 14 })
         .fontSize(14)

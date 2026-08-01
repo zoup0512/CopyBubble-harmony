@@ -1,10 +1,10 @@
 {
   "string": [
-    { "name": "module_desc", "value": "Copy Bubble 主模块" },
-    { "name": "EntryAbility_desc", "value": "剪贴板气泡管理器" },
+    { "name": "module_desc", "value": "Copy Bubble main module" },
+    { "name": "EntryAbility_desc", "value": "Clipboard bubble manager" },
     { "name": "EntryAbility_label", "value": "Copy Bubble" },
-    { "name": "reason_float_window", "value": "用于在其他应用之上显示可拖动的复制气泡" },
-    { "name": "reason_background", "value": "用于在后台持续接收剪贴板变化" },
-    { "name": "reason_vibrate", "value": "用于复制成功时的轻震动反馈" }
+    { "name": "reason_float_window", "value": "Show a draggable copy bubble over other apps" },
+    { "name": "reason_background", "value": "Keep receiving clipboard changes in background" },
+    { "name": "reason_vibrate", "value": "Light vibration feedback when copying succeeds" }
   ]
 }

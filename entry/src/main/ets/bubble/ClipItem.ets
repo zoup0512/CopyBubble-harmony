@@ -5,6 +5,7 @@
  */
 
 import { BubbleColor } from './BubbleTokens';
+import { I18n } from '../common/I18n';
 
 export enum ClipKind {
   Code = 'code',
@@ -57,40 +58,40 @@ export class ClipUtil {
 
   static styleOf(kind: ClipKind): ClipStyle {
     if (kind === ClipKind.Link) {
-      return new ClipStyle(BubbleColor.TAG_LINK_BG, BubbleColor.TAG_LINK_FG, '链');
+      return new ClipStyle(BubbleColor.TAG_LINK_BG, BubbleColor.TAG_LINK_FG, I18n.t('tag_link'));
     }
     if (kind === ClipKind.Code) {
-      return new ClipStyle(BubbleColor.TAG_CODE_BG, BubbleColor.TAG_CODE_FG, '码');
+      return new ClipStyle(BubbleColor.TAG_CODE_BG, BubbleColor.TAG_CODE_FG, I18n.t('tag_code'));
     }
-    return new ClipStyle(BubbleColor.TAG_TEXT_BG, BubbleColor.TAG_TEXT_FG, '文');
+    return new ClipStyle(BubbleColor.TAG_TEXT_BG, BubbleColor.TAG_TEXT_FG, I18n.t('tag_text'));
   }
 
   static kindLabel(kind: ClipKind): string {
     if (kind === ClipKind.Link) {
-      return '链接';
+      return I18n.t('type_link');
     }
     if (kind === ClipKind.Code) {
-      return '验证码';
+      return I18n.t('type_code');
     }
-    return '文本';
+    return I18n.t('type_text');
   }
 
   /** 相对时间。超过一天只说「昨天 / N 天前」，不显示具体时刻。 */
   static ago(time: number): string {
     const d: number = Date.now() - time;
     if (d < 60000) {
-      return `${Math.max(Math.floor(d / 1000), 1)} 秒前`;
+      return I18n.f('ago_seconds', `${Math.max(Math.floor(d / 1000), 1)}`);
     }
     if (d < 3600000) {
-      return `${Math.floor(d / 60000)} 分钟前`;
+      return I18n.f('minutes_ago', `${Math.floor(d / 60000)}`);
     }
     if (d < 86400000) {
-      return `${Math.floor(d / 3600000)} 小时前`;
+      return I18n.f('ago_hours', `${Math.floor(d / 3600000)}`);
     }
     if (d < 172800000) {
-      return '昨天';
+      return I18n.t('ago_yesterday');
     }
-    return `${Math.floor(d / 86400000)} 天前`;
+    return I18n.f('ago_days', `${Math.floor(d / 86400000)}`);
   }
 
   /** 单行摘要，去掉换行与多余空白，面板里靠省略号收尾 */
@@ -103,7 +104,7 @@ export class ClipUtil {
     return [
       new ClipItem('1', '738 291', ClipKind.Code, now - 12000),
       new ClipItem('2', 'gitee.com/openharmony/docs', ClipKind.Link, now - 240000),
-      new ClipItem('3', '周四 15:00 三号会议室复盘', ClipKind.Text, now - 90000000)
+      new ClipItem('3', I18n.t('preview_mock_text'), ClipKind.Text, now - 90000000)
     ];
   }
 }

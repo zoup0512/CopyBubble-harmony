@@ -1,6 +1,7 @@
 import { ClipItem } from '../model/ClipItem';
 import { Theme, Const } from '../common/Theme';
 import { TimeUtil } from '../utils/TimeUtil';
+import { I18n } from '../common/I18n';
 
 /**
  * 一条剪贴记录。
@@ -67,7 +68,7 @@ export struct BubbleCard {
       .borderRadius(Theme.RADIUS_CHIP)
 
       if (this.item.pinned) {
-        Text('置顶')
+        Text(I18n.t('pinned_tag'))
           .fontSize(11)
           .fontWeight(FontWeight.Medium)
           .fontColor(Theme.PIN)
@@ -102,19 +103,19 @@ export struct BubbleCard {
   @Builder
   Footer() {
     Row({ space: 8 }) {
-      Text(`${this.item.charCount} 字`)
+      Text(I18n.f('char_count', `${this.item.charCount}`))
         .fontSize(11)
         .fontColor(Theme.TEXT_3)
 
       if (this.item.useCount > 0) {
-        Text(`· 用过 ${this.item.useCount} 次`)
+        Text(I18n.f('used_count', `${this.item.useCount}`))
           .fontSize(11)
           .fontColor(Theme.TEXT_3)
       }
 
       Blank()
 
-      Text(this.item.pinned ? '取消置顶' : '置顶')
+      Text(this.item.pinned ? I18n.t('unpin_action') : I18n.t('pin_action'))
         .fontSize(12)
         .fontWeight(FontWeight.Medium)
         .fontColor(this.item.pinned ? Theme.PIN : Theme.TEXT_2)
@@ -123,7 +124,7 @@ export struct BubbleCard {
         .backgroundColor('#F5F5FA')
         .onClick(() => this.onPin(this.item))
 
-      Text('复制')
+      Text(I18n.t('copy_action'))
         .fontSize(12)
         .fontWeight(FontWeight.Medium)
         .fontColor(Theme.BRAND)

@@ -7,6 +7,7 @@ import { BubbleWindowManager } from '../bubble/BubbleWindowManager';
 import { Theme, Const } from '../common/Theme';
 import { SwitchRowParam, KVParam } from '../common/UiModels';
 import { AppKeys } from '../bubble/AppKeys';
+import { I18n } from '../common/I18n';
 
 @Component
 export struct SettingsPage {
@@ -40,16 +41,16 @@ export struct SettingsPage {
         Scroll() {
           Column({ space: 18 }) {
             Column({ space: 0 }) {
-              this.SectionTitle('收录')
+              this.SectionTitle(I18n.t('section_capture'))
               this.SwitchRow({
-                title: '自动收录剪贴板',
-                desc: '回到应用时把新复制的内容存下来。系统可能因隐私管控拦下这个动作，那时请用底部的「粘贴」按钮。',
+                title: I18n.t('auto_capture_title'),
+                desc: I18n.t('auto_capture_desc'),
                 value: this.autoCapture,
                 onToggle: (v: boolean) => this.setAutoCapture(v)
               })
               this.SwitchRow({
-                title: '跳过重复内容',
-                desc: '相同文本只保留一条，时间刷新到最新。',
+                title: I18n.t('dedupe_title'),
+                desc: I18n.t('dedupe_desc'),
                 value: this.dedupe,
                 onToggle: (v: boolean) => this.setBool(Const.KEY_DEDUPE, v)
               })
@@ -57,28 +58,28 @@ export struct SettingsPage {
             .width('100%')
 
             Column({ space: 0 }) {
-              this.SectionTitle('气泡')
+              this.SectionTitle(I18n.t('section_bubble'))
               this.SwitchRow({
-                title: '桌面悬浮气泡',
-                desc: '在其他应用之上显示一枚可拖动的气泡，随手取用最近几条。需要悬浮窗权限。',
+                title: I18n.t('float_bubble_title'),
+                desc: I18n.t('float_bubble_desc'),
                 value: this.floatBubble,
                 onToggle: (v: boolean) => this.setFloatBubble(v)
               })
               this.SwitchRow({
-                title: '复制震动反馈',
-                desc: '复制成功时给一次轻震动。',
+                title: I18n.t('haptic_title'),
+                desc: I18n.t('haptic_desc'),
                 value: this.haptic,
                 onToggle: (v: boolean) => this.setBool(Const.KEY_HAPTIC, v)
               })
             }
             .width('100%')
 
-            this.SectionTitle('容量')
+            this.SectionTitle(I18n.t('section_capacity'))
             this.CapacityCard()
-            this.SectionTitle('数据')
+            this.SectionTitle(I18n.t('section_data'))
             this.DataCard()
 
-            this.SectionTitle('关于')
+            this.SectionTitle(I18n.t('section_about'))
             this.AboutCard()
           }
           .padding({ left: Theme.PAGE_PAD, right: Theme.PAGE_PAD, bottom: 48 })
@@ -108,7 +109,7 @@ export struct SettingsPage {
         .height(40)
         .textAlign(TextAlign.Center)
         .onClick(() => this.pathStack.pop())
-      Text('设置')
+      Text(I18n.t('settings_title'))
         .fontSize(17)
         .fontWeight(FontWeight.Medium)
         .fontColor(Theme.TEXT_1)
@@ -158,10 +159,10 @@ export struct SettingsPage {
   CapacityCard() {
     Column({ space: 12 }) {
       Column({ space: 4 }) {
-        Text('保留条数上限')
+        Text(I18n.t('max_records_title'))
           .fontSize(15)
           .fontColor(Theme.TEXT_1)
-        Text('超出后从最旧的非置顶记录开始清理，置顶内容永远保留。')
+        Text(I18n.t('max_records_desc'))
           .fontSize(12)
           .lineHeight(18)
           .fontColor(Theme.TEXT_2)
@@ -171,7 +172,7 @@ export struct SettingsPage {
 
       Row({ space: 8 }) {
         ForEach(Const.MAX_OPTIONS, (n: number) => {
-          Text(n === Const.MAX_UNLIMITED ? '无上限' : `${n}`)
+          Text(n === Const.MAX_UNLIMITED ? I18n.t('unlimited') : `${n}`)
             .fontSize(14)
             .fontWeight(this.maxRecords === n ? FontWeight.Medium : FontWeight.Normal)
             .fontColor(this.maxRecords === n ? Color.White : Theme.TEXT_2)
@@ -198,7 +199,7 @@ export struct SettingsPage {
   DataCard() {
     Column({ space: 0 }) {
       Row() {
-        Text('清空非置顶记录')
+        Text(I18n.t('clear_unpinned'))
           .fontSize(15)
           .fontColor(Theme.TEXT_1)
           .layoutWeight(1)
@@ -211,7 +212,7 @@ export struct SettingsPage {
       Divider().color(Theme.DIVIDER).margin({ left: 16, right: 16 })
 
       Row() {
-        Text('清空全部记录')
+        Text(I18n.t('clear_all'))
           .fontSize(15)
           .fontColor(Theme.DANGER)
           .layoutWeight(1)
@@ -229,9 +230,9 @@ export struct SettingsPage {
   @Builder
   AboutCard() {
     Column({ space: 8 }) {
-      this.KV({ key: '应用', value: 'Copy Bubble 1.0.0' })
+      this.KV({ key: I18n.t('about_app'), value: 'Copy Bubble 1.0.0' })
       this.KV({ key: 'Harmony API', value: '6.1.1(24)' })
-      this.KV({ key: '数据存放', value: '仅在本机，不联网上传' })
+      this.KV({ key: I18n.t('about_storage'), value: I18n.t('about_storage_value') })
     }
     .width('100%')
     .padding(16)
@@ -282,7 +283,7 @@ export struct SettingsPage {
       this.floatBubble = false;
       await this.sm.put(Const.KEY_FLOAT_BUBBLE, false);
       promptAction.showToast({
-        message: '打不开悬浮窗，需要先授予悬浮窗权限',
+        message: I18n.t('float_permission_denied'),
         duration: 2400
       });
       return;
@@ -294,7 +295,7 @@ export struct SettingsPage {
     await this.sm.put(Const.KEY_FLOAT_BUBBLE, ok);
     if (!ok) {
       promptAction.showToast({
-        message: '打不开悬浮窗，需要先授予悬浮窗权限',
+        message: I18n.t('float_permission_denied'),
         duration: 2400
       });
     }
@@ -302,11 +303,11 @@ export struct SettingsPage {
 
   private confirmClear(all: boolean): void {
     promptAction.showDialog({
-      title: all ? '清空全部记录' : '清空非置顶记录',
-      message: all ? '包括置顶在内的所有内容都会消失，无法恢复。' : '置顶的内容会留下，其余全部删除。',
+      title: all ? I18n.t('clear_all') : I18n.t('clear_unpinned'),
+      message: all ? I18n.t('clear_all_msg') : I18n.t('clear_unpinned_msg'),
       buttons: [
-        { text: '取消', color: Theme.TEXT_2 },
-        { text: '清空', color: Theme.DANGER }
+        { text: I18n.t('btn_cancel'), color: Theme.TEXT_2 },
+        { text: I18n.t('btn_clear'), color: Theme.DANGER }
       ]
     }).then(async (res: promptAction.ShowDialogSuccessResponse) => {
       if (res.index !== 1) {
@@ -314,10 +315,10 @@ export struct SettingsPage {
       }
       if (all) {
         await this.store.clearAll();
-        promptAction.showToast({ message: '已清空' });
+        promptAction.showToast({ message: I18n.t('toast_cleared') });
       } else {
         const n: number = await this.store.clearUnpinned();
-        promptAction.showToast({ message: `已删除 ${n} 条` });
+        promptAction.showToast({ message: I18n.f('toast_deleted_n', `${n}`) });
       }
     });
   }

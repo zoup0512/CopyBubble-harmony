@@ -9,6 +9,7 @@
 import { curves } from '@kit.ArkUI';
 import { BubbleColor, BubbleShape, BubbleSize } from './BubbleTokens';
 import { ClipItem, ClipKind, ClipStyle, ClipUtil } from './ClipItem';
+import { I18n } from '../common/I18n';
 
 @Component
 export struct ClipboardPanel {
@@ -72,10 +73,10 @@ export struct ClipboardPanel {
   @Builder
   emptyState() {
     Column({ space: 4 }) {
-      Text('还没有复制过东西')
+      Text(I18n.t('panel_empty_title'))
         .fontSize(12)
         .fontColor(this.dark ? BubbleColor.PANEL_TEXT_DARK : BubbleColor.PANEL_TEXT)
-      Text('复制任意文本，它会出现在这里')
+      Text(I18n.t('panel_empty_hint'))
         .fontSize(10)
         .fontColor(BubbleColor.PANEL_SUB)
     }
@@ -87,13 +88,13 @@ export struct ClipboardPanel {
   build() {
     Column() {
       Row() {
-        Text('剪贴板')
+        Text(I18n.t('panel_header'))
           .fontSize(10)
           .fontColor(BubbleColor.PANEL_SUB)
           .letterSpacing(1.2)
         Blank()
         Row({ space: 5 }) {
-          Text('关闭悬浮气泡')
+          Text(I18n.t('panel_close_bubble'))
             .fontSize(10)
             .fontColor(BubbleColor.PANEL_SUB)
           // 彻底关闭悬浮球。打开时 ON，拨到 OFF 即销毁双窗口。

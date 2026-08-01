@@ -1,5 +1,5 @@
 import { promptAction } from '@kit.ArkUI';
-import { ClipItem, Category, CATEGORIES, NavParam } from '../model/ClipItem';
+import { ClipItem, Category, getCategories, NavParam } from '../model/ClipItem';
 import { ClipStore, StoreStats } from '../manager/ClipStore';
 import { ClipboardKit } from '../manager/ClipboardKit';
 import { StorageManager } from '../manager/StorageManager';
@@ -9,6 +9,7 @@ import { SearchField } from '../components/SearchField';
 import { CategoryStrip } from '../components/CategoryStrip';
 import { EmptyState } from '../components/EmptyState';
 import { CategoryCounts } from '../common/UiModels';
+import { I18n } from '../common/I18n';
 
 @Component
 export struct HomeView {
@@ -18,22 +19,26 @@ export struct HomeView {
   @StorageLink('bottomInset') bottomInset: number = 0;
 
   @State private list: ClipItem[] = [];
-  @State private keyword: string = '';
-  @State private category: string = 'all';
+  // 切分类/搜索词必须立即重查列表：否则只在 store 变化时才 refresh，
+  // 列表会卡在上一次的筛选结果上——选「链接」再加一条非链接内容，
+  // 回到「全部」会看到过期（甚至空）的列表。
+  @State @Watch('onFilterChange') private keyword: string = '';
+  @State @Watch('onFilterChange') private category: string = 'all';
   @State private counts: CategoryCounts = new CategoryCounts();
   @State private stats: StoreStats = new StoreStats();
   @State private showCompose: boolean = false;
   @State private draft: string = '';
 
   private store: ClipStore = ClipStore.getInstance();
-  private categories: Category[] = CATEGORIES;
+  private categories: Category[] = [];
   private onStoreChange: () => void = () => this.refresh();
 
   aboutToAppear(): void {
+    this.categories = getCategories();
     this.store.subscribe(this.onStoreChange);
     this.store.load();
     this.refresh();
-    ClipboardKit.observe(() => this.captureIfEnabled('剪贴板'));
+    ClipboardKit.observe(() => this.captureIfEnabled(I18n.t('source_clipboard')));
   }
 
   aboutToDisappear(): void {
@@ -42,7 +47,12 @@ export struct HomeView {
   }
 
   onAppForeground(): void {
-    this.captureIfEnabled('剪贴板');
+    this.captureIfEnabled(I18n.t('source_clipboard'));
+  }
+
+  /** 分类或搜索词变化时，立即用新条件重查列表（不计入 store 计数，仅过滤） */
+  private onFilterChange(): void {
+    this.list = this.store.query(this.category, this.keyword);
   }
 
   // ---------- 数据 ----------
@@ -70,7 +80,7 @@ export struct HomeView {
     }
     const added: ClipItem | null = await this.store.add(text, source);
     if (added !== null) {
-      this.toast('已收录 1 条');
+      this.toast(I18n.t('toast_captured_1'));
     }
   }
 
@@ -78,25 +88,25 @@ export struct HomeView {
     const ok: boolean = await ClipboardKit.write(item.content);
     if (ok) {
       await this.store.markUsed(item.id);
-      this.toast('已复制到剪贴板');
+      this.toast(I18n.t('toast_copied'));
     } else {
-      this.toast('复制失败，请重试');
+      this.toast(I18n.t('toast_copy_failed'));
     }
   }
 
   private async pinItem(item: ClipItem): Promise<void> {
     const pinned: boolean = await this.store.togglePin(item.id);
-    this.toast(pinned ? '已置顶' : '已取消置顶');
+    this.toast(pinned ? I18n.t('toast_pinned') : I18n.t('toast_unpinned'));
   }
 
   private async captureFromButton(): Promise<void> {
     const text: string = await ClipboardKit.read();
     if (text.length === 0) {
-      this.toast('剪贴板是空的');
+      this.toast(I18n.t('toast_clipboard_empty'));
       return;
     }
-    const added: ClipItem | null = await this.store.add(text, '粘贴按钮');
-    this.toast(added !== null ? '已收录' : '这条已经在列表里了');
+    const added: ClipItem | null = await this.store.add(text, I18n.t('source_paste'));
+    this.toast(added !== null ? I18n.t('toast_captured') : I18n.t('toast_already_exists'));
   }
 
   private async saveDraft(): Promise<void> {
@@ -106,13 +116,13 @@ export struct HomeView {
     if (text.trim().length === 0) {
       return;
     }
-    const added: ClipItem | null = await this.store.add(text, '手动输入');
-    this.toast(added !== null ? '已保存' : '这条已经在列表里了');
+    const added: ClipItem | null = await this.store.add(text, I18n.t('source_manual'));
+    this.toast(added !== null ? I18n.t('toast_saved') : I18n.t('toast_already_exists'));
   }
 
   private async deleteItem(id: string): Promise<void> {
     await this.store.remove(id);
-    this.toast('已删除');
+    this.toast(I18n.t('toast_deleted'));
   }
 
   private toast(msg: string): void {
@@ -152,7 +162,7 @@ export struct HomeView {
       height: 340,
       dragBar: true,
       backgroundColor: Theme.CARD_BG,
-      title: { title: '新建一条' }
+      title: { title: I18n.t('compose_title') }
     })
   }
 
@@ -161,12 +171,12 @@ export struct HomeView {
     Column({ space: 4 }) {
       Row() {
         Column({ space: 2 }) {
-          Text('Copy Bubble')
+          Text(I18n.t('app_title'))
             .fontSize(26)
             .fontWeight(FontWeight.Bold)
             .fontColor(Theme.TEXT_1)
             .letterSpacing(-0.3)
-          Text(`共 ${this.stats.total} 条 · 今天新增 ${this.stats.today} · 置顶 ${this.stats.pinned}`)
+          Text(I18n.f('stats_summary', `${this.stats.total}`, `${this.stats.today}`, `${this.stats.pinned}`))
             .fontSize(12)
             .fontColor(Theme.TEXT_2)
         }
@@ -200,10 +210,10 @@ export struct HomeView {
     if (this.list.length === 0) {
       Column() {
         EmptyState({
-          title: this.keyword.length > 0 ? '没有匹配的内容' : '剪贴板还很安静',
+          title: this.keyword.length > 0 ? I18n.t('empty_no_match_title') : I18n.t('empty_quiet_title'),
           hint: this.keyword.length > 0
-            ? '换个关键词试试，或者清空搜索框'
-            : '点下面的「粘贴」把当前剪贴板存进来，也可以手动新建一条'
+            ? I18n.t('empty_no_match_hint')
+            : I18n.t('empty_quiet_hint')
         })
       }
       .layoutWeight(1)
@@ -222,7 +232,7 @@ export struct HomeView {
         }, (item: ClipItem) => `${item.id}_${item.updateTime}_${item.pinned}`)
 
         ListItem() {
-          Text(`到底了 · ${this.list.length} 条`)
+          Text(I18n.f('list_end', `${this.list.length}`))
             .fontSize(12)
             .fontColor(Theme.TEXT_3)
             .width('100%')
@@ -243,7 +253,7 @@ export struct HomeView {
   @Builder
   SwipeDelete(item: ClipItem) {
     Row() {
-      Text('删除')
+      Text(I18n.t('btn_delete'))
         .fontSize(14)
         .fontWeight(FontWeight.Medium)
         .fontColor(Color.White)
@@ -278,7 +288,7 @@ export struct HomeView {
         .borderRadius(26)
         .onClick((event: ClickEvent, result: PasteButtonOnClickResult) => {
           if (result !== PasteButtonOnClickResult.SUCCESS) {
-            this.toast('没能读取剪贴板');
+            this.toast(I18n.t('toast_paste_failed'));
             return;
           }
           this.captureFromButton();
@@ -304,7 +314,7 @@ export struct HomeView {
   @Builder
   ComposeSheet() {
     Column({ space: 14 }) {
-      TextArea({ text: $$this.draft, placeholder: '粘贴或输入要保存的内容' })
+      TextArea({ text: $$this.draft, placeholder: I18n.t('compose_placeholder') })
         .placeholderColor(Theme.TEXT_3)
         .fontSize(15)
         .height(160)
@@ -313,7 +323,7 @@ export struct HomeView {
         .padding(12)
 
       Row({ space: 10 }) {
-        Button('取消')
+        Button(I18n.t('btn_cancel'))
           .fontSize(15)
           .fontColor(Theme.TEXT_2)
           .backgroundColor('#F0F0F6')
@@ -321,7 +331,7 @@ export struct HomeView {
           .layoutWeight(1)
           .onClick(() => { this.showCompose = false; })
 
-        Button('保存')
+        Button(I18n.t('btn_save'))
           .fontSize(15)
           .fontWeight(FontWeight.Medium)
           .backgroundColor(Theme.BRAND)
