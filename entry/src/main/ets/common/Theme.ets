@@ -80,6 +80,9 @@ export class Const {
   static readonly KEY_DEDUPE: string = 'dedupe';
   static readonly KEY_MAX: string = 'max_records';
   static readonly KEY_HAPTIC: string = 'haptic';
+  static readonly KEY_FEEDBACK_DONE: string = 'feedback_done';
+  static readonly KEY_FEEDBACK_LAUNCH_COUNT: string = 'feedback_launch_count';
+  static readonly FEEDBACK_LAUNCH_THRESHOLD: number = 3;
 
   static readonly DEFAULT_MAX: number = 100;
   static readonly MAX_UNLIMITED: number = 0;

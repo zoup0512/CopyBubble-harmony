@@ -1,4 +1,7 @@
 import { promptAction } from '@kit.ArkUI';
+import { common, Want } from '@kit.AbilityKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+import { hilog } from '@kit.PerformanceAnalysisKit';
 import { ClipItem, Category, getCategories, NavParam } from '../model/ClipItem';
 import { ClipStore, StoreStats } from '../manager/ClipStore';
 import { ClipboardKit } from '../manager/ClipboardKit';
@@ -8,8 +11,12 @@ import { BubbleCard } from '../components/BubbleCard';
 import { SearchField } from '../components/SearchField';
 import { CategoryStrip } from '../components/CategoryStrip';
 import { EmptyState } from '../components/EmptyState';
+import { FeedbackDialog } from '../components/FeedbackDialog';
 import { CategoryCounts } from '../common/UiModels';
 import { I18n } from '../common/I18n';
+
+const TAG: string = 'CopyBubble/Home';
+const DOMAIN: number = 0x1001;
 
 @Component
 export struct HomeView {
@@ -28,6 +35,7 @@ export struct HomeView {
   @State private stats: StoreStats = new StoreStats();
   @State private showCompose: boolean = false;
   @State private draft: string = '';
+  @State private showFeedbackDialog: boolean = false;
 
   private store: ClipStore = ClipStore.getInstance();
   private categories: Category[] = [];
@@ -39,6 +47,7 @@ export struct HomeView {
     this.store.load();
     this.refresh();
     ClipboardKit.observe(() => this.captureIfEnabled(I18n.t('source_clipboard')));
+    this.checkAndShowFeedback();
   }
 
   aboutToDisappear(): void {
@@ -48,6 +57,38 @@ export struct HomeView {
 
   onAppForeground(): void {
     this.captureIfEnabled(I18n.t('source_clipboard'));
+  }
+
+  /** 累计启动达到阈值且未评价过时，弹出评分引导弹窗 */
+  private async checkAndShowFeedback(): Promise<void> {
+    const prefs: StorageManager = StorageManager.getInstance();
+    if (prefs.getBool(Const.KEY_FEEDBACK_DONE, false)) {
+      return;
+    }
+    const count: number = prefs.getNumber(Const.KEY_FEEDBACK_LAUNCH_COUNT, 0) + 1;
+    if (count >= Const.FEEDBACK_LAUNCH_THRESHOLD) {
+      await prefs.put(Const.KEY_FEEDBACK_LAUNCH_COUNT, 0);
+      this.showFeedbackDialog = true;
+    } else {
+      await prefs.put(Const.KEY_FEEDBACK_LAUNCH_COUNT, count);
+    }
+  }
+
+  /** 跳转到应用市场详情页，让用户给好评 */
+  private openAppMarket(): void {
+    try {
+      const ctx: common.UIAbilityContext = this.getUIContext().getHostContext() as common.UIAbilityContext;
+      const want: Want = {
+        action: 'ohos.want.action.appdetail',
+        uri: 'market://details?id=com.razor.tools.copybubble',
+      };
+      ctx.startAbility(want).catch((e: BusinessError) => {
+        hilog.error(DOMAIN, TAG, `openAppMarket failed ${e.code} ${e.message}`);
+      });
+    } catch (e) {
+      const err: BusinessError = e as BusinessError;
+      hilog.error(DOMAIN, TAG, `openAppMarket error ${err.code} ${err.message}`);
+    }
   }
 
   /** 分类或搜索词变化时，立即用新条件重查列表（不计入 store 计数，仅过滤） */
@@ -153,6 +194,24 @@ export struct HomeView {
       .height('100%')
 
       this.ActionDock()
+
+      if (this.showFeedbackDialog) {
+        Column() {
+          FeedbackDialog({
+            onLater: () => { this.showFeedbackDialog = false; },
+            onRate: () => {
+              this.showFeedbackDialog = false;
+              StorageManager.getInstance().put(Const.KEY_FEEDBACK_DONE, true);
+              this.openAppMarket();
+            },
+          })
+        }
+        .width('100%')
+        .height('100%')
+        .justifyContent(FlexAlign.Center)
+        .alignItems(HorizontalAlign.Center)
+        .backgroundColor('#99000000')
+      }
     }
     .width('100%')
     .height('100%')

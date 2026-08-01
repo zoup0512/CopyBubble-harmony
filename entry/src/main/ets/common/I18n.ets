@@ -153,7 +153,13 @@ export class I18n {
     ['preview_dark_bg', '深色应用底'],
     ['preview_recall', '召回'],
     ['preview_back', '返回'],
-    ['preview_mock_text', '周四 15:00 三号会议室复盘']
+    ['preview_mock_text', '周四 15:00 三号会议室复盘'],
+
+    // ---------- 评分反馈弹窗 ----------
+    ['dialog_feedback_title', '体验反馈'],
+    ['dialog_feedback_message', '感谢你的支持，如果用着还不错，不妨去应用市场给个好评鼓励一下'],
+    ['dialog_feedback_later', '以后再说'],
+    ['dialog_feedback_rate', '去评价']
   ]);
 
   private static readonly EN: Map<string, string> = new Map<string, string>([
@@ -299,7 +305,13 @@ export class I18n {
     ['preview_dark_bg', 'Dark background'],
     ['preview_recall', 'Recall'],
     ['preview_back', 'Back'],
-    ['preview_mock_text', 'Thu 15:00 Meeting room 3 retrospective']
+    ['preview_mock_text', 'Thu 15:00 Meeting room 3 retrospective'],
+
+    // ---------- Feedback / rating dialog ----------
+    ['dialog_feedback_title', 'Enjoying Copy Bubble?'],
+    ['dialog_feedback_message', 'Thanks for your support! If you like the app, please consider leaving us a rating in the AppGallery.'],
+    ['dialog_feedback_later', 'Later'],
+    ['dialog_feedback_rate', 'Rate Now']
   ]);
 
   /** 启动时调一次，按系统语言选定文案表 */
