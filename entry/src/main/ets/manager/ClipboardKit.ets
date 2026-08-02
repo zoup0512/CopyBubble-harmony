@@ -130,14 +130,17 @@ export class ClipboardKit {
       return;
     }
     try {
+      // 用 time 模式而非 preset：preset 的 effectId 兼容性差（实测某真机报
+      // 14600101 / nodict，haptic.clock.timer 不在设备字典里），time 模式几乎所有设备都支持。
       vibrator.startVibration(
-        { type: 'preset', effectId: 'haptic.clock.timer', count: 1 },
+        { type: 'time', duration: 20 },
         { usage: 'touch' }
-      ).catch(() => {
-        hilog.debug(DOMAIN, TAG, 'vibrate rejected');
+      ).catch((e: BusinessError) => {
+        hilog.warn(DOMAIN, TAG, `vibrate rejected ${e.code}`);
       });
     } catch (e) {
-      hilog.debug(DOMAIN, TAG, 'vibrate unavailable');
+      const err: BusinessError = e as BusinessError;
+      hilog.warn(DOMAIN, TAG, `vibrate unavailable ${err.code}`);
     }
   }
 }
