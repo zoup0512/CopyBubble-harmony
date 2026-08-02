@@ -13,12 +13,39 @@
           "storeFile": "C:\\Users\\24790\\.ohos\\config\\default_CopyBubble-harmony_fPG8r0ceElVwhu6nq5K9b7GmPoR6Dwd-Wb-_eelZThg=.p12",
           "storePassword": "0000001B2FEA8979EE9CA44C0973440010F936FA27231C61DD452E2D03338ED40CED4CD79A66BE647E57A2"
         }
+      },
+      {
+        "name": "release",
+        "type": "HarmonyOS",
+        "material": {
+          "certpath": "./entry/sign/release/release-CopyBubble.cer",
+          "keyAlias": "debugKey",
+          "keyPassword": "x121169225",
+          "profile": "./entry/sign/release/profile-CopyBubble-20260803Release.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "./entry/sign/release/release-copy_bubble.p12",
+          "storePassword": "x121169225"
+        }
       }
     ],
     "products": [
       {
         "name": "default",
         "signingConfig": "default",
+        "compatibleSdkVersion": "6.1.1(24)",
+        "compileSdkVersion": "6.1.1(24)",
+        "targetSdkVersion": "6.1.1(24)",
+        "runtimeOS": "HarmonyOS",
+        "buildOption": {
+          "strictMode": {
+            "caseSensitiveCheck": true,
+            "useNormalizedOHMUrl": true
+          }
+        }
+      },
+      {
+        "name": "release",
+        "signingConfig": "release",
         "compatibleSdkVersion": "6.1.1(24)",
         "compileSdkVersion": "6.1.1(24)",
         "targetSdkVersion": "6.1.1(24)",
@@ -48,7 +75,8 @@
         {
           "name": "default",
           "applyToProducts": [
-            "default"
+            "default",
+            "release"
           ]
         }
       ]
