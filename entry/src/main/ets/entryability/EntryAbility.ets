@@ -70,7 +70,25 @@ export default class EntryAbility extends UIAbility {
       // 主页面起来后再恢复悬浮气泡：避免气泡窗口抢在主窗口之前创建导致 z-order 异常。
       // 落盘偏好是唯一真相源——上次用户开过就自动重建，否则保持关闭。
       this.restoreBubbleIfNeeded();
+      // 首次冷启动申请一次剪贴板读取权限。用偏好位避免反复弹窗；拒绝后不再骚扰，
+      // 用户日后去系统设置补授权，下次回前台会被 hasPermission() 检测到自动恢复收录。
+      this.ensureClipboardPermission();
     });
+  }
+
+  /**
+   * 冷启动按偏好位决定是否申请剪贴板权限：只在首次拉起时弹一次系统授权窗，
+   * 之后靠 hasPermission() 的真实状态判定。用户后续在系统设置里改授权也能被感知。
+   */
+  private async ensureClipboardPermission(): Promise<void> {
+    const prompted: boolean = StorageManager.getInstance()
+      .getBool(Const.KEY_CLIP_PERM_PROMPTED, false);
+    if (prompted) {
+      return;
+    }
+    await StorageManager.getInstance().put(Const.KEY_CLIP_PERM_PROMPTED, true);
+    const granted: boolean = await ClipboardKit.requestPermission(this.context);
+    hilog.info(DOMAIN, TAG, `ensure clipboard permission granted=${granted}`);
   }
 
   /**

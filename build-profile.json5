@@ -7,11 +7,11 @@
         "material": {
           "certpath": "C:\\Users\\24790\\.ohos\\config\\default_CopyBubble-harmony_fPG8r0ceElVwhu6nq5K9b7GmPoR6Dwd-Wb-_eelZThg=.cer",
           "keyAlias": "debugKey",
-          "keyPassword": "0000001B249707E4A849A76EF84AE52828AB6E2E2B69CF2EB837AFE31DEF6E0E6B4563310BDB00D17A9B00",
+          "keyPassword": "0000001B653BAD6AC8BC741FE3255EDF38923A23E71DE9466677FFA1C9D6658A58B3FBD7E9549A204F660E",
           "profile": "C:\\Users\\24790\\.ohos\\config\\default_CopyBubble-harmony_fPG8r0ceElVwhu6nq5K9b7GmPoR6Dwd-Wb-_eelZThg=.p7b",
           "signAlg": "SHA256withECDSA",
           "storeFile": "C:\\Users\\24790\\.ohos\\config\\default_CopyBubble-harmony_fPG8r0ceElVwhu6nq5K9b7GmPoR6Dwd-Wb-_eelZThg=.p12",
-          "storePassword": "0000001B34BC1FED3F0A637C97303CA2FC7D4C2549D4A09D00142F8BC7D75F561FBF1E10684894C4E2653B"
+          "storePassword": "0000001B2FEA8979EE9CA44C0973440010F936FA27231C61DD452E2D03338ED40CED4CD79A66BE647E57A2"
         }
       }
     ],

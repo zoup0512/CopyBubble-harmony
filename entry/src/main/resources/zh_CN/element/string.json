@@ -5,6 +5,7 @@
     { "name": "EntryAbility_label", "value": "随手贴" },
     { "name": "reason_float_window", "value": "用于在其他应用之上显示可拖动的复制气泡" },
     { "name": "reason_background", "value": "用于在后台持续接收剪贴板变化" },
-    { "name": "reason_vibrate", "value": "用于复制成功时的轻震动反馈" }
+    { "name": "reason_vibrate", "value": "用于复制成功时的轻震动反馈" },
+    { "name": "reason_read_clipboard", "value": "读取系统剪贴板，收录复制的内容" }
   ]
 }

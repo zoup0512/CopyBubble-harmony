@@ -109,10 +109,9 @@ export struct HomeView {
     this.stats = this.store.stats();
   }
 
-  /** 自动收录：只在用户开启后尝试，被系统拒绝时静默跳过 */
+  /** 自动收录：已获剪贴板权限才尝试，未授权时静默跳过（仍可用底部「粘贴」安全控件） */
   private async captureIfEnabled(source: string): Promise<void> {
-    const on: boolean = StorageManager.getInstance().getBool(Const.KEY_AUTO_CAPTURE, false);
-    if (!on) {
+    if (!ClipboardKit.hasPermission()) {
       return;
     }
     const text: string = await ClipboardKit.read();

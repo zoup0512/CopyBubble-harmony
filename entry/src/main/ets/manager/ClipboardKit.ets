@@ -1,4 +1,5 @@
 import { pasteboard, BusinessError } from '@kit.BasicServicesKit';
+import { abilityAccessCtrl, bundleManager, common, Permissions } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { vibrator } from '@kit.SensorServiceKit';
 import { StorageManager } from './StorageManager';
@@ -6,19 +7,56 @@ import { Const } from '../common/Theme';
 
 const TAG: string = 'CopyBubble/Clipboard';
 const DOMAIN: number = 0x1001;
+const PERM: Permissions = 'ohos.permission.READ_PASTEBOARD';
 
 export type ClipboardChange = () => void;
 
 /**
  * 系统剪贴板封装。
  *
- * 说明：HarmonyOS NEXT 对静默读取剪贴板有管控，读取动作需要由用户操作触发
- * （推荐使用 PasteButton 安全控件）。这里的 read() 只在应用处于前台、
- * 且用户已开启“自动收录”时调用，失败会被安静地忽略。
+ * 读取剪贴板需要 ohos.permission.READ_PASTEBOARD（user_grant）。授权后 read()
+ * 可在应用前台时直接拿到内容；未授权时由 read() 自身静默兜底，调用方另可走
+ * PasteButton 安全控件路径（点击即视为临时授权）。
  */
 export class ClipboardKit {
   private static listener: ClipboardChange | null = null;
   private static hooked: boolean = false;
+
+  /** 剪贴板读取权限是否已授予。READ_PASTEBOARD 是 user_grant 权限。 */
+  static hasPermission(): boolean {
+    try {
+      const info = bundleManager.getBundleInfoForSelfSync(
+        bundleManager.BundleFlag.GET_BUNDLE_INFO_WITH_APPLICATION);
+      const tokenId: number = info.appInfo.accessTokenId;
+      return abilityAccessCtrl.createAtManager().checkAccessTokenSync(tokenId, PERM) ===
+        abilityAccessCtrl.GrantStatus.PERMISSION_GRANTED;
+    } catch (e) {
+      hilog.warn(DOMAIN, TAG, 'check clipboard permission failed');
+      return false;
+    }
+  }
+
+  /**
+   * 拉起系统授权弹窗请求剪贴板读取权限。已授权直接返回 true。
+   * 调用方负责用偏好位控制弹窗频次（避免每次冷启动都打扰用户）。
+   * 返回是否已授权（用户拒绝或出错则 false）。
+   */
+  static async requestPermission(context: common.UIAbilityContext): Promise<boolean> {
+    if (ClipboardKit.hasPermission()) {
+      return true;
+    }
+    try {
+      const res = await abilityAccessCtrl.createAtManager().requestPermissionsFromUser(context, [PERM]);
+      const granted: boolean = res.authResults.length > 0 &&
+        res.authResults[0] === abilityAccessCtrl.GrantStatus.PERMISSION_GRANTED;
+      hilog.info(DOMAIN, TAG, `request clipboard permission granted=${granted}`);
+      return granted;
+    } catch (e) {
+      const err: BusinessError = e as BusinessError;
+      hilog.error(DOMAIN, TAG, `request clipboard permission failed ${err.code} ${err.message}`);
+      return false;
+    }
+  }
 
   /** 写入剪贴板 */
   static async write(text: string): Promise<boolean> {

@@ -76,6 +76,7 @@ export class Const {
   static readonly PREF_NAME: string = 'copy_bubble_store';
   static readonly KEY_ITEMS: string = 'clip_items';
   static readonly KEY_AUTO_CAPTURE: string = 'auto_capture';
+  static readonly KEY_CLIP_PERM_PROMPTED: string = 'clip_perm_prompted';
   static readonly KEY_FLOAT_BUBBLE: string = 'float_bubble';
   static readonly KEY_DEDUPE: string = 'dedupe';
   static readonly KEY_MAX: string = 'max_records';
