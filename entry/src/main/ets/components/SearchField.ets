@@ -11,8 +11,10 @@ export struct SearchField {
   build() {
     Row({ space: 8 }) {
       Text('⌕')
-        .fontSize(18)
+        .fontSize(22)
         .fontColor(this.focused ? Theme.BRAND : Theme.TEXT_3)
+        .height(40)
+        .lineHeight(40)
 
       TextInput({ text: $$this.keyword, placeholder: this.placeholder, controller: this.controller })
         .placeholderColor(Theme.TEXT_3)
