@@ -5,7 +5,8 @@ import { StorageManager } from '../manager/StorageManager';
 import { BubbleWindow as BubbleWindowLegacy } from '../manager/BubbleWindow_legacy';
 import { BubbleWindowManager } from '../bubble/BubbleWindowManager';
 import { Theme, Const } from '../common/Theme';
-import { SwitchRowParam, KVParam } from '../common/UiModels';
+import { KVParam } from '../common/UiModels';
+import { SwitchRow } from '../components/SwitchRow';
 import { AppKeys } from '../bubble/AppKeys';
 import { I18n } from '../common/I18n';
 
@@ -40,28 +41,28 @@ export struct SettingsPage {
           Column({ space: 18 }) {
             Column({ space: 0 }) {
               this.SectionTitle(I18n.t('section_capture'))
-              this.SwitchRow({
+              SwitchRow({
                 title: I18n.t('dedupe_title'),
                 desc: I18n.t('dedupe_desc'),
                 value: this.dedupe,
-                onToggle: (v: boolean) => this.setBool(Const.KEY_DEDUPE, v)
+                onChange: (v: boolean) => this.setBool(Const.KEY_DEDUPE, v)
               })
             }
             .width('100%')
 
             Column({ space: 0 }) {
               this.SectionTitle(I18n.t('section_bubble'))
-              this.SwitchRow({
+              SwitchRow({
                 title: I18n.t('float_bubble_title'),
                 desc: I18n.t('float_bubble_desc'),
                 value: this.floatBubble,
-                onToggle: (v: boolean) => this.setFloatBubble(v)
+                onChange: (v: boolean) => this.setFloatBubble(v)
               })
-              this.SwitchRow({
+              SwitchRow({
                 title: I18n.t('haptic_title'),
                 desc: I18n.t('haptic_desc'),
                 value: this.haptic,
-                onToggle: (v: boolean) => this.setBool(Const.KEY_HAPTIC, v)
+                onChange: (v: boolean) => this.setBool(Const.KEY_HAPTIC, v)
               })
             }
             .width('100%')
@@ -119,32 +120,6 @@ export struct SettingsPage {
       .fontColor(Theme.TEXT_3)
       .width('100%')
       .padding({ left: 4, bottom: 8 })
-  }
-
-  @Builder
-  SwitchRow($$: SwitchRowParam) {
-    Row({ space: 12 }) {
-      Column({ space: 4 }) {
-        Text($$.title)
-          .fontSize(15)
-          .fontColor(Theme.TEXT_1)
-        Text($$.desc)
-          .fontSize(12)
-          .lineHeight(18)
-          .fontColor(Theme.TEXT_2)
-      }
-      .alignItems(HorizontalAlign.Start)
-      .layoutWeight(1)
-
-      Toggle({ type: ToggleType.Switch, isOn: $$.value })
-        .selectedColor(Theme.BRAND)
-        .onChange((v: boolean) => $$.onToggle(v))
-    }
-    .width('100%')
-    .padding(16)
-    .backgroundColor(Theme.CARD_BG)
-    .borderRadius(16)
-    .margin({ bottom: 8 })
   }
 
   @Builder

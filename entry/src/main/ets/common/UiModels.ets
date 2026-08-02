@@ -3,13 +3,6 @@
  * 在 ArkTS 里不会触发 builder 内部的重新渲染。
  */
 
-export class SwitchRowParam {
-  title: string = '';
-  desc: string = '';
-  value: boolean = false;
-  onToggle: (v: boolean) => void = () => {};
-}
-
 export class ActionRowParam {
   title: string = '';
   sub: string = '';
