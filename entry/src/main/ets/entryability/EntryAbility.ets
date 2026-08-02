@@ -1,4 +1,4 @@
-import { AbilityConstant, UIAbility, Want } from '@kit.AbilityKit';
+import { AbilityConstant, UIAbility, Want, common } from '@kit.AbilityKit';
 import { window } from '@kit.ArkUI';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { BusinessError } from '@kit.BasicServicesKit';
@@ -6,6 +6,7 @@ import { StorageManager } from '../manager/StorageManager';
 import { ClipStore } from '../manager/ClipStore';
 import { ClipboardKit } from '../manager/ClipboardKit';
 import { BubbleWindowManager } from '../bubble/BubbleWindowManager';
+import { BubbleWindow as BubbleWindowLegacy } from '../manager/BubbleWindow_legacy';
 import { BubbleBridge, BubbleAdapter } from '../bubble/BubbleBridge';
 import { ClipItem as BubbleClipItem } from '../bubble/ClipItem';
 import { AppKeys } from '../bubble/AppKeys';
@@ -66,7 +67,37 @@ export default class EntryAbility extends UIAbility {
         return;
       }
       this.applyImmersive(windowStage);
+      // 主页面起来后再恢复悬浮气泡：避免气泡窗口抢在主窗口之前创建导致 z-order 异常。
+      // 落盘偏好是唯一真相源——上次用户开过就自动重建，否则保持关闭。
+      this.restoreBubbleIfNeeded();
     });
+  }
+
+  /**
+   * 冷启动按落盘偏好恢复悬浮气泡。复用 SettingsPage.setFloatBubble(true) 的流程：
+   * 先 requestPermission（已授权直接返回 true），再 BubbleWindowManager.create()。
+   * 失败时回写偏好为 false，避免下次启动又白跑一遍并保持开关与实际状态一致。
+   */
+  private async restoreBubbleIfNeeded(): Promise<void> {
+    const on: boolean = StorageManager.getInstance().getBool(Const.KEY_FLOAT_BUBBLE, false);
+    if (!on) {
+      return;
+    }
+    const ctx: common.UIAbilityContext = this.context;
+    const granted: boolean = await BubbleWindowLegacy.requestPermission(ctx);
+    if (!granted) {
+      hilog.warn(DOMAIN, TAG, 'restore bubble: permission denied, disable');
+      await StorageManager.getInstance().put(Const.KEY_FLOAT_BUBBLE, false);
+      AppStorage.setOrCreate(AppKeys.BUBBLE_RUNNING, false);
+      return;
+    }
+    await BubbleWindowManager.get().create(ctx);
+    const ok: boolean = BubbleWindowManager.get().isShown();
+    hilog.info(DOMAIN, TAG, `restore bubble: create done isShown=${ok}`);
+    // create() 内部已写 BUBBLE_RUNNING=true；这里只对失败做兜底，保持偏好与实际一致。
+    if (!ok) {
+      await StorageManager.getInstance().put(Const.KEY_FLOAT_BUBBLE, false);
+    }
   }
 
   /** 沉浸式布局：把状态栏/导航栏高度交给页面自己留白 */
