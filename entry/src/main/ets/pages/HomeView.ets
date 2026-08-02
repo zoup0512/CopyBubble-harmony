@@ -1,5 +1,5 @@
 import { promptAction } from '@kit.ArkUI';
-import { common, Want } from '@kit.AbilityKit';
+import { bundleManager, common, Want } from '@kit.AbilityKit';
 import { BusinessError } from '@kit.BasicServicesKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { ClipItem, Category, getCategories, NavParam } from '../model/ClipItem';
@@ -59,8 +59,11 @@ export struct HomeView {
     this.captureIfEnabled(I18n.t('source_clipboard'));
   }
 
-  /** 累计启动达到阈值且未评价过时，弹出评分引导弹窗 */
+  /** 累计启动达到阈值且未评价过时，弹出评分引导弹窗；debug 构建下不弹 */
   private async checkAndShowFeedback(): Promise<void> {
+    if (this.isDebugBuild()) {
+      return;
+    }
     const prefs: StorageManager = StorageManager.getInstance();
     if (prefs.getBool(Const.KEY_FEEDBACK_DONE, false)) {
       return;
@@ -71,6 +74,18 @@ export struct HomeView {
       this.showFeedbackDialog = true;
     } else {
       await prefs.put(Const.KEY_FEEDBACK_LAUNCH_COUNT, count);
+    }
+  }
+
+  /** 当前是否为 debug 构建：通过 ApplicationInfo.debug 判定，出错时按 release 处理 */
+  private isDebugBuild(): boolean {
+    try {
+      const info = bundleManager.getBundleInfoForSelfSync(
+        bundleManager.BundleFlag.GET_BUNDLE_INFO_WITH_APPLICATION);
+      return info.appInfo.debug;
+    } catch (e) {
+      hilog.warn(DOMAIN, TAG, 'isDebugBuild check failed');
+      return false;
     }
   }
 
