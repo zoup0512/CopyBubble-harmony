@@ -24,6 +24,7 @@ import { display, window } from '@kit.ArkUI';
 import { BusinessError } from '@kit.BasicServicesKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { AppKeys } from './AppKeys';
+import { BubbleSize } from './BubbleTokens';
 import { Rect } from './DockEngine';
 
 const TAG: string = 'CopyBubble/Window';
@@ -44,8 +45,6 @@ export class BubbleWindowManager {
   private touchPendingY: number = 0;
   private touchHasPending: boolean = false;
   private shown: boolean = false;
-  /** 视觉层上一次已应用的目标矩形（vp）。恒为全屏，去重跳过用。 */
-  private lastViewRect: Rect = { x: 0, y: 0, w: 0, h: 0 };
 
   static get(): BubbleWindowManager {
     if (!BubbleWindowManager.instance) {
@@ -61,9 +60,15 @@ export class BubbleWindowManager {
   }
 
   async create(ctx: common.UIAbilityContext): Promise<void> {
-    if (this.viewWin) {
+    // 只有双层都在才算已就绪。只剩视觉层是残废态（有外观、点不动），
+    // 必须先 destroy 清干净再重建，否则永远卡在"气泡在但没反应"。
+    if (this.viewWin && this.touchWin) {
       hilog.info(DOMAIN, TAG, 'create: already exists, skip');
       return;
+    }
+    if (this.viewWin || this.touchWin) {
+      hilog.warn(DOMAIN, TAG, 'create: partial windows found, reset before recreate');
+      await this.destroy();
     }
     this.ctx = ctx;
     hilog.info(DOMAIN, TAG, 'create: start');
@@ -89,7 +94,6 @@ export class BubbleWindowManager {
       // 视觉层铺满全屏一次，之后永不 resize
       await vw.moveWindowTo(vp2px(s.x), vp2px(s.y));
       await vw.resize(vp2px(s.w), vp2px(s.h));
-      this.lastViewRect = s;
       await vw.showWindow();
 
       // ---- 交互层：48×48、可触摸、跟随气泡 ----
@@ -102,10 +106,10 @@ export class BubbleWindowManager {
       };
       const tw: window.Window = await window.createWindow(touchCfg);
       this.touchWin = tw;
-      // 交互层窗口尺寸：3×3 气泡热区（144×144 vp）。气泡在窗口内用 .position() 移动
+      // 交互层窗口尺寸：3×3 气泡热区。气泡在窗口内用 .position() 移动
       // （ArkUI 原生渲染，无 WMS 异步振荡），只在气泡接近窗口边缘时才 moveWindowTo
       // 重新居中——从每帧 60+ 次降到整个拖拽过程数次，消除高频 moveWindowTo 振荡。
-      await tw.resize(vp2px(144), vp2px(144));
+      await tw.resize(vp2px(BubbleSize.TOUCH_WIN), vp2px(BubbleSize.TOUCH_WIN));
       await tw.moveWindowTo(vp2px(s.w), vp2px(0));
       await tw.setUIContent('pages/BubbleTouchPage');
       tw.setWindowBackgroundColor('#00000000');
@@ -122,32 +126,8 @@ export class BubbleWindowManager {
     } catch (e) {
       const err: BusinessError = e as BusinessError;
       hilog.error(DOMAIN, TAG, `create failed ${err.code} ${err.message}`);
-    }
-  }
-
-  /**
-   * 视觉层目标矩形回调（单位 vp）。
-   * 视觉层恒为全屏（见 DockEngine.windowRect），运行期 emitRect 回调的矩形与
-   * 创建时一致，下面的去重会跳过，零窗口操作。
-   */
-  async applyRect(r: Rect): Promise<void> {
-    const win: window.Window | undefined = this.viewWin;
-    if (!win) {
-      hilog.warn(DOMAIN, TAG, `applyRect: no view window, drop ${JSON.stringify(r)}`);
-      return;
-    }
-    if (r.x === this.lastViewRect.x && r.y === this.lastViewRect.y &&
-      r.w === this.lastViewRect.w && r.h === this.lastViewRect.h) {
-      return;
-    }
-    this.lastViewRect = { x: r.x, y: r.y, w: r.w, h: r.h };
-    hilog.info(DOMAIN, TAG, `applyRect(view) vp x=${r.x} y=${r.y} w=${r.w} h=${r.h}`);
-    try {
-      await win.moveWindowTo(vp2px(r.x), vp2px(r.y));
-      await win.resize(vp2px(r.w), vp2px(r.h));
-    } catch (e) {
-      const err: BusinessError = e as BusinessError;
-      hilog.error(DOMAIN, TAG, `applyRect failed ${err.code} ${err.message}`);
+      // 半成品窗口留着只会挡住下层又不响应手势，整体回滚让调用方能干净重试
+      await this.destroy();
     }
   }
 

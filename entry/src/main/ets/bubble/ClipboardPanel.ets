@@ -21,7 +21,6 @@ export struct ClipboardPanel {
   @Prop shown: boolean = false;
 
   onPick: (item: ClipItem) => void = () => {};
-  onClear: () => void = () => {};
   /** header 右侧开关转 OFF 时彻底关闭悬浮球 */
   onClose: () => void = () => {};
 

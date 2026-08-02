@@ -4,10 +4,22 @@ Clipboard manager with a draggable floating bubble. Built with ArkTS/ArkUI for H
 
 ## Build
 
-This project is built inside **DevEco Studio** (6.1+). No command-line build wrapper (hvigorw) is committed; open the project in DevEco Studio and use Build > Build HAP(s).
+This project is normally built inside **DevEco Studio** (6.1+) via Build > Build HAP(s).
 
 - SDK: HarmonyOS 6.1.1(24)
 - `build-profile.json5` contains signing config (debug)
+
+No `hvigorw` wrapper is committed, but the one shipped with DevEco Studio works for a
+command-line compile check (useful for verifying ArkTS changes without opening the IDE).
+`DEVECO_SDK_HOME` must be set explicitly or hvigor fails with `00303217 Configuration Error`:
+
+```powershell
+$env:DEVECO_SDK_HOME = "C:\Program Files\Huawei\DevEco Studio\sdk"
+& "C:\Program Files\Huawei\DevEco Studio\tools\hvigor\bin\hvigorw.bat" assembleHap --no-daemon
+```
+
+Note: hvigor writes its real error text to stderr in a form PowerShell truncates — redirect
+through `cmd /c "... > log 2>&1"` and read the log to see the actual failure.
 
 ## Internationalization
 

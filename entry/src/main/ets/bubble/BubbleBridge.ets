@@ -23,6 +23,7 @@
  *   BubbleBridge.hooks.onClose = () => MySettings.setFloatBubble(false);
  */
 
+import { AppKeys } from './AppKeys';
 import { ClipItem, ClipKind, ClipUtil } from './ClipItem';
 import { DockSide } from './DockEngine';
 
@@ -69,18 +70,18 @@ export class BubbleBridge {
    * 在你原来写入剪贴记录的地方调一次即可。
    */
   static notifyCaptured(): void {
-    const cur: number = AppStorage.get<number>('cb_pulse') ?? 0;
-    AppStorage.setOrCreate('cb_pulse', cur + 1);
+    const cur: number = AppStorage.get<number>(AppKeys.PULSE) ?? 0;
+    AppStorage.setOrCreate(AppKeys.PULSE, cur + 1);
   }
 
   /** 从你的通知栏或应用内入口召回被隐藏的气泡 */
   static recall(): void {
-    AppStorage.setOrCreate('cb_bubble_hidden', false);
+    AppStorage.setOrCreate(AppKeys.BUBBLE_HIDDEN, false);
   }
 
   /** 下层应用是深色时传 true，只影响展开面板的配色 */
   static setDarkHost(dark: boolean): void {
-    AppStorage.setOrCreate('cb_dark_host', dark);
+    AppStorage.setOrCreate(AppKeys.DARK_HOST, dark);
   }
 }
 

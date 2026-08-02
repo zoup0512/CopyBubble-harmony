@@ -18,8 +18,6 @@ export enum DockState {
   Snapping = 'snapping',
   /** 贴边常驻，露出 71% */
   Docked = 'docked',
-  /** 静置 2.5s 后休眠，露出 42%，不透明度 0.52 */
-  Dozing = 'dozing',
   /** 面板展开 */
   Expanded = 'expanded',
   /** 拖入底部吸入区后隐藏 */
@@ -108,23 +106,13 @@ export class DockEngine {
   }
 
   /**
-   * 贴边后的横坐标。
-   * 左侧为负值（气泡左半出屏），右侧为 W - peek。
+   * 贴边常驻位的横坐标。
+   * 左侧为负值（气泡左半出屏），右侧为 W - PEEK_DOCKED。
    */
-  dockedX(side: DockSide, peek: number): number {
-    return side === DockSide.Left
-      ? peek - BubbleSize.BUBBLE
-      : this.screenW - peek;
-  }
-
-  /** 常驻位 */
   restX(side: DockSide): number {
-    return this.dockedX(side, BubbleSize.PEEK_DOCKED);
-  }
-
-  /** 休眠位 */
-  dozeX(side: DockSide): number {
-    return this.dockedX(side, BubbleSize.PEEK_DOZING);
+    return side === DockSide.Left
+      ? BubbleSize.PEEK_DOCKED - BubbleSize.BUBBLE
+      : this.screenW - BubbleSize.PEEK_DOCKED;
   }
 
   /** 是否落在底部隐藏吸入区内 */
@@ -167,33 +155,6 @@ export class DockEngine {
     originY = Math.min(Math.max(originY, 0), 1);
 
     return { x: px, y: py, w: w, h: h, originX: originX, originY: originY };
-  }
-
-  /**
-   * 视觉层窗口需要覆盖的矩形。
-   *
-   * 双窗口架构（见 BubbleWindowManager）：视觉层是「全屏、不可触摸」的纯渲染层，
-   * 交互层是「48×48、可触摸」的手势层。两者都【只 move、永不 resize】——
-   * resize 会让 WMS 重建 surface，中间帧覆盖整屏 = 桌面闪一下（应用层无法消除，
-   * 已多轮日志验证）。所以视觉层恒为全屏，创建时 apply 一次即可。
-   *
-   * 视觉层不可触摸（setWindowTouchable(false)），触摸整窗穿透到下层 app；
-   * 交互层只有气泡那么大，跟随气泡 move，下层 app 在气泡之外完全可点。
-   */
-  windowRect(state: DockState, side: DockSide, bubbleX: number, bubbleY: number,
-    itemCount: number): Rect {
-    // 恒定全屏。视觉层只在 create 时 apply 一次，之后永不 resize → 永不闪。
-    return { x: 0, y: 0, w: this.screenW, h: this.screenH };
-  }
-
-  /**
-   * 交互层窗口的矩形：覆盖气泡触控热区（HIT_AREA×HIT_AREA）。
-   * 交互层只 move 不 resize，跟随气泡移动；尺寸恒定，因此无 surface 重建、不闪。
-   * 窗口左上角对齐气泡热区左上角 (bubbleX, bubbleY)。
-   */
-  touchRect(bubbleX: number, bubbleY: number): Rect {
-    const s: number = BubbleSize.HIT_AREA;
-    return { x: bubbleX, y: bubbleY, w: s, h: s };
   }
 
   /** 横竖屏切换后按旧比例还原纵向位置，side 保持不变 */

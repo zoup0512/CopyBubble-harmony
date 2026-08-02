@@ -5,10 +5,6 @@
  */
 
 export class AppKeys {
-  /** ClipItem[] 的 JSON 字符串，跨 UI 实例传递用 */
-  static readonly ITEMS: string = 'cb_items_json';
-  /** 记录条数，主界面和角标都读它 */
-  static readonly COUNT: string = 'cb_count';
   /** 自增计数，每 +1 触发一次气泡捕获波纹 */
   static readonly PULSE: string = 'cb_pulse';
   /** 气泡是否被用户拖到底部隐藏了 */
@@ -44,10 +40,4 @@ export class AppKeys {
   static readonly BUBBLE_SIDE: string = 'cb_bubble_side';
   /** 记录条数，交互层据此渲染角标 */
   static readonly BUBBLE_ITEM_COUNT: string = 'cb_bubble_item_count';
-  /** 捕获波纹缩放，交互层据此渲染波纹动画 */
-  static readonly BUBBLE_PULSE_SCALE: string = 'cb_bubble_pulse_scale';
-  /** 捕获波纹不透明度 */
-  static readonly BUBBLE_PULSE_ALPHA: string = 'cb_bubble_pulse_alpha';
-  /** 面板配色跟随下层应用是否深色 */
-  static readonly BUBBLE_DARK: string = 'cb_bubble_dark';
 }

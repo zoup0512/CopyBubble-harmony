@@ -98,13 +98,4 @@ export class ClipUtil {
   static preview(content: string): string {
     return content.replace(/\s+/g, ' ').trim();
   }
-
-  static mock(): ClipItem[] {
-    const now: number = Date.now();
-    return [
-      new ClipItem('1', '738 291', ClipKind.Code, now - 12000),
-      new ClipItem('2', 'gitee.com/openharmony/docs', ClipKind.Link, now - 240000),
-      new ClipItem('3', I18n.t('preview_mock_text'), ClipKind.Text, now - 90000000)
-    ];
-  }
 }

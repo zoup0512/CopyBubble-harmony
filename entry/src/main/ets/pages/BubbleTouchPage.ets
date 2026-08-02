@@ -7,14 +7,15 @@
  * 原生移动（系统级同步，零延迟）；若气泡在视觉层靠 AppStorage 跨窗口同步坐标，
  * 同步频率跟不上 60fps，气泡会卡顿/闪烁。
  *
- * 低频状态（停靠侧、状态、条数、波纹）仍通过 AppStorage 从视觉层同步过来，
+ * 低频状态（停靠侧、状态、条数）仍通过 AppStorage 从视觉层同步过来，
  * 它们更新不频繁，AppStorage 同步延迟无感知。
+ * 注意：动画不能跨窗口同步，只能在本页本地 animateTo（见 onPulse）。
  */
 
 import { curves } from '@kit.ArkUI';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { BubbleWindowManager } from '../bubble/BubbleWindowManager';
-import { DockEngine, DockSide, DockState } from '../bubble/DockEngine';
+import { DockEngine, DockSide, DockState, Rect } from '../bubble/DockEngine';
 import { AppKeys } from '../bubble/AppKeys';
 import { BubbleBadge, BubbleIcon } from '../bubble/BubbleIcon';
 import { BubbleColor, BubbleMotion, BubbleShape, BubbleSize } from '../bubble/BubbleTokens';
@@ -43,10 +44,14 @@ struct BubbleTouchPage {
   @StorageLink(AppKeys.BUBBLE_SIDE) side: string = DockSide.Right;
   /** 记录条数（角标用）*/
   @StorageLink(AppKeys.BUBBLE_ITEM_COUNT) itemCount: number = 0;
-  /** 捕获波纹缩放 */
-  @StorageLink(AppKeys.BUBBLE_PULSE_SCALE) pulseScale: number = 1;
-  /** 捕获波纹不透明度 */
-  @StorageLink(AppKeys.BUBBLE_PULSE_ALPHA) pulseAlpha: number = 0;
+  /**
+   * 捕获信号，每 +1 触发一次波纹。动画必须在本窗口本地跑：波纹圆是本页渲染的，
+   * 若由视觉层 animateTo 再经 AppStorage 同步过来，跨窗口只会收到动画终值
+   * （alpha=0），波纹等于永远看不见。
+   */
+  @StorageLink(AppKeys.PULSE) @Watch('onPulse') pulseTick: number = 0;
+  @State private pulseScale: number = 1;
+  @State private pulseAlpha: number = 0;
 
   private engine: DockEngine = new DockEngine(360, 780);
   private dragOriginX: number = 0;
@@ -63,10 +68,11 @@ struct BubbleTouchPage {
   /** 窗口需要居中时，气泡距窗口边缘的最小留白 vp，小于此值才 moveWindowTo */
   private static readonly RECENTER_MARGIN: number = 24;
 
-  /** 交互层窗口边长 vp（3×3 气泡热区 = 144）*/
-  private static readonly WIN_SIZE: number = 144;
-
   aboutToAppear(): void {
+    // 交互层的拖拽钳制、底部吸入区判定全靠 engine，必须喂真实屏幕尺寸。
+    // 用构造默认的 360×780 会让 clampDragY / inDismissZone 在真机上整体偏移。
+    const s: Rect = this.mgr.screenSizeVp();
+    this.engine.updateScreen(s.w, s.h);
     const savedSide: string = AppStorage.get<string>(AppKeys.LAST_SIDE) ?? 'R';
     const side: DockSide = savedSide === 'L' ? DockSide.Left : DockSide.Right;
     const savedY: number = AppStorage.get<number>(AppKeys.LAST_Y) ?? 240;
@@ -74,12 +80,26 @@ struct BubbleTouchPage {
     this.bubbleX = this.engine.restX(side);
     // 初始把窗口居中在气泡上
     this.centerWindowOn();
-    hilog.info(DOMAIN, TAG, `aboutToAppear bubble=(${this.bubbleX},${this.bubbleY}) win=(${this.winX},${this.winY})`);
+    hilog.info(DOMAIN, TAG,
+      `aboutToAppear screen=${s.w}x${s.h} bubble=(${this.bubbleX},${this.bubbleY}) win=(${this.winX},${this.winY})`);
+  }
+
+  /** 捕获到一条新剪贴内容：在本窗口跑一次扩散波纹 */
+  private onPulse(): void {
+    if (this.pulseTick <= 0 || this.state === DockState.Hidden) {
+      return;
+    }
+    this.pulseScale = 1;
+    this.pulseAlpha = 0.9;
+    animateTo({ duration: BubbleMotion.PULSE_DURATION, curve: Curve.EaseOut }, () => {
+      this.pulseScale = BubbleMotion.SCALE_PULSE_TO;
+      this.pulseAlpha = 0;
+    });
   }
 
   /** 把交互层窗口居中在气泡当前位置（winXY = bubbleXY - winSize/2 + bubbleSize/2） */
   private centerWindowOn(): void {
-    const half: number = BubbleTouchPage.WIN_SIZE / 2;
+    const half: number = BubbleSize.TOUCH_WIN / 2;
     const bubbleHalf: number = BubbleSize.HIT_AREA / 2;
     this.winX = this.bubbleX + bubbleHalf - half;
     this.winY = this.bubbleY + bubbleHalf - half;
@@ -93,7 +113,7 @@ struct BubbleTouchPage {
   private recenterIfNeeded(): void {
     const localX: number = this.bubbleX - this.winX;
     const localY: number = this.bubbleY - this.winY;
-    const maxLocal: number = BubbleTouchPage.WIN_SIZE - BubbleSize.HIT_AREA - BubbleTouchPage.RECENTER_MARGIN;
+    const maxLocal: number = BubbleSize.TOUCH_WIN - BubbleSize.HIT_AREA - BubbleTouchPage.RECENTER_MARGIN;
     if (localX < BubbleTouchPage.RECENTER_MARGIN || localX > maxLocal ||
       localY < BubbleTouchPage.RECENTER_MARGIN || localY > maxLocal) {
       this.centerWindowOn();
@@ -108,13 +128,11 @@ struct BubbleTouchPage {
   }
 
   private isDockedShape(): boolean {
-    return this.state === DockState.Docked ||
-      this.state === DockState.Dozing ||
-      this.state === DockState.Expanded;
+    return this.state === DockState.Docked || this.state === DockState.Expanded;
   }
 
   build() {
-    // 气泡本体 + 手势。气泡用 .position() 在 144×144 窗口内移动（ArkUI 原生渲染），
+    // 气泡本体 + 手势。气泡用 .position() 在 TOUCH_WIN 见方的窗口内移动（ArkUI 原生渲染），
     // 窗口只在气泡接近边缘时才 moveWindowTo 居中（低频，避免高频振荡）。
     Stack({ alignContent: Alignment.TopStart }) {
       // 捕获波纹
@@ -132,7 +150,7 @@ struct BubbleTouchPage {
       Stack({ alignContent: Alignment.Center }) {
         BubbleIcon({
           scaleRatio: 1,
-          ghostVisible: this.state !== DockState.Dozing,
+          ghostVisible: true,
           shiftX: this.isDockedShape()
             ? (this.side === DockSide.Left
               ? BubbleShape.DOCK_GLYPH_SHIFT
@@ -170,7 +188,7 @@ struct BubbleTouchPage {
       BubbleBadge({
         count: this.itemCount,
         onLeft: this.side === DockSide.Right,
-        visible: this.state !== DockState.Dozing && this.itemCount > 0
+        visible: this.itemCount > 0
       })
         .position(this.side === DockSide.Right
           ? { x: -3, y: -3 }
@@ -178,8 +196,6 @@ struct BubbleTouchPage {
     }
     .width(BubbleSize.HIT_AREA)
     .height(BubbleSize.HIT_AREA)
-    .opacity(this.state === DockState.Dozing
-      ? BubbleMotion.OPACITY_DOZING : BubbleMotion.OPACITY_DOCKED)
     .scale(this.dragging
       ? { x: BubbleMotion.SCALE_DRAG, y: BubbleMotion.SCALE_DRAG }
       : { x: 1, y: 1 })

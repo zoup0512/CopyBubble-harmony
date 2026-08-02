@@ -147,14 +147,8 @@ export class I18n {
     ['tag_code', '码'],
     ['tag_text', '文'],
 
-    // ---------- 预览页 ----------
-    ['preview_article', '某篇正在阅读的长文'],
-    ['preview_simulate_copy', '模拟一次复制'],
-    ['preview_light_bg', '浅色应用底'],
-    ['preview_dark_bg', '深色应用底'],
-    ['preview_recall', '召回'],
-    ['preview_back', '返回'],
-    ['preview_mock_text', '周四 15:00 三号会议室复盘'],
+    // ---------- 拖拽隐藏 ----------
+    ['dismiss_hint', '拖到这里隐藏'],
 
     // ---------- 评分反馈弹窗 ----------
     ['dialog_feedback_title', '体验反馈'],
@@ -300,14 +294,8 @@ export class I18n {
     ['tag_code', '#'],
     ['tag_text', 'T'],
 
-    // ---------- Preview page ----------
-    ['preview_article', 'A long article being read'],
-    ['preview_simulate_copy', 'Simulate a copy'],
-    ['preview_light_bg', 'Light background'],
-    ['preview_dark_bg', 'Dark background'],
-    ['preview_recall', 'Recall'],
-    ['preview_back', 'Back'],
-    ['preview_mock_text', 'Thu 15:00 Meeting room 3 retrospective'],
+    // ---------- Drag to hide ----------
+    ['dismiss_hint', 'Drag here to hide'],
 
     // ---------- Feedback / rating dialog ----------
     ['dialog_feedback_title', 'Enjoying Copy Bubble?'],

@@ -12,10 +12,12 @@ export class BubbleSize {
   static readonly GLYPH_BOX: number = 22;
   /** 贴边常驻时露出屏幕的宽度（48 的 71%） */
   static readonly PEEK_DOCKED: number = 34;
-  /** 休眠时露出屏幕的宽度（48 的 42%） */
-  static readonly PEEK_DOZING: number = 20;
   /** 触控热区，恒定不随视觉露出收缩 */
   static readonly HIT_AREA: number = 48;
+  /** 交互层窗口边长（3×3 气泡热区）。气泡在窗口内用 position 移动，
+   *  只在接近窗口边缘时才 moveWindowTo 重新居中，以此压掉高频 WMS 振荡。
+   *  BubbleWindowManager 建窗与 BubbleTouchPage 定位共用此值，不可各写一份。 */
+  static readonly TOUCH_WIN: number = 144;
   /** 展开面板宽度，约 13 个汉字 */
   static readonly PANEL_W: number = 226;
   /** 面板与气泡间距 */
@@ -92,8 +94,6 @@ export class BubbleShape {
 
 /* ---------------- 动效 ---------------- */
 export class BubbleMotion {
-  /** 静置多久进入休眠 */
-  static readonly DOZE_DELAY: number = 2500;
   /** 磁吸弹簧参数：velocity, mass, stiffness, damping */
   static readonly SPRING_VELOCITY: number = 0;
   static readonly SPRING_MASS: number = 1;
@@ -101,17 +101,11 @@ export class BubbleMotion {
   static readonly SPRING_DAMPING: number = 30;
   /** 圆 → D 形形变 */
   static readonly MORPH_DURATION: number = 340;
-  /** 进入休眠 */
-  static readonly DOZE_DURATION: number = 300;
-  /** 唤醒 */
-  static readonly WAKE_DURATION: number = 160;
   /** 捕获波纹 */
   static readonly PULSE_DURATION: number = 700;
   /** 隐藏吸入 */
   static readonly DISMISS_DURATION: number = 300;
 
-  static readonly OPACITY_DOCKED: number = 1.0;
-  static readonly OPACITY_DOZING: number = 0.52;
   static readonly SCALE_DRAG: number = 0.92;
   static readonly SCALE_PULSE_TO: number = 2.1;
 }

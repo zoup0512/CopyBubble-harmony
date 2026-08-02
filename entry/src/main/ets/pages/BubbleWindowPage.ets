@@ -30,6 +30,8 @@ struct BubbleWindowPage {
   @State private keyboardH: number = 0;
 
   private mgr: BubbleWindowManager = BubbleWindowManager.get();
+  /** 持有被监听的窗口，aboutToDisappear 时才能取消订阅 */
+  private keyboardWin: window.Window | undefined = undefined;
 
   aboutToAppear(): void {
     const s: Rect = this.mgr.screenSizeVp();
@@ -38,6 +40,18 @@ struct BubbleWindowPage {
     console.info(`CopyBubble/Host aboutToAppear screen=${s.w}x${s.h}`);
     this.reload();
     this.watchKeyboard();
+  }
+
+  aboutToDisappear(): void {
+    // 悬浮窗销毁重建是常规操作（关开开关、隐藏召回），不退订会一路叠加监听
+    if (this.keyboardWin) {
+      try {
+        this.keyboardWin.off('keyboardHeightChange');
+      } catch (e) {
+        console.error('CopyBubble keyboard unwatch threw');
+      }
+      this.keyboardWin = undefined;
+    }
   }
 
   private reload(): void {
@@ -51,6 +65,7 @@ struct BubbleWindowPage {
   private watchKeyboard(): void {
     try {
       window.getLastWindow(getContext(this)).then((win: window.Window) => {
+        this.keyboardWin = win;
         win.on('keyboardHeightChange', (h: number) => {
           this.keyboardH = px2vp(h);
         });
@@ -76,9 +91,6 @@ struct BubbleWindowPage {
         hostH: this.availableH(),
         dark: this.darkHost,
         items: this.items,
-        onWindowRectChange: (r: Rect) => {
-          this.mgr.applyRect(r);
-        },
         onViewTouchableChange: (touchable: boolean) => {
           this.mgr.setViewTouchable(touchable);
         },
