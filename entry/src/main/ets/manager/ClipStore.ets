@@ -4,6 +4,7 @@ import { TypeDetector } from '../utils/TypeDetector';
 import { StorageManager } from './StorageManager';
 import { Const } from '../common/Theme';
 import { BubbleBridge } from '../bubble/BubbleBridge';
+import { I18n } from '../common/I18n';
 
 const TAG: string = 'CopyBubble/Store';
 const DOMAIN: number = 0x1001;
@@ -67,6 +68,21 @@ export class ClipStore {
     }
     this.loaded = true;
     this.sort();
+    this.emit();
+  }
+
+  /** 首次启动植入一条内置使用说明，归类文本并置顶；偏好位保证只播种一次 */
+  async seedHelp(): Promise<void> {
+    const sm: StorageManager = StorageManager.getInstance();
+    if (sm.getBool(Const.KEY_HELP_SEEDED, false)) {
+      return;
+    }
+    const item: ClipItem = new ClipItem(I18n.t('help_guide'), ClipType.TEXT, I18n.t('source_help'));
+    item.pinned = true;
+    this.items.unshift(item);
+    this.sort();
+    await this.persist();
+    await sm.put(Const.KEY_HELP_SEEDED, true);
     this.emit();
   }
 

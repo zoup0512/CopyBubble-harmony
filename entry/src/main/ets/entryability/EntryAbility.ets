@@ -32,6 +32,7 @@ export default class EntryAbility extends UIAbility {
     try {
       await StorageManager.getInstance().init(this.context);
       await ClipStore.getInstance().load();
+      await ClipStore.getInstance().seedHelp();
     } catch (e) {
       const err: BusinessError = e as BusinessError;
       hilog.error(DOMAIN, TAG, `bootstrap failed ${err.code} ${err.message}`);
@@ -67,12 +68,12 @@ export default class EntryAbility extends UIAbility {
         return;
       }
       this.applyImmersive(windowStage);
-      // 主页面起来后再恢复悬浮气泡：避免气泡窗口抢在主窗口之前创建导致 z-order 异常。
+      // 先申请剪贴板读取权限（首次冷启动弹一次系统授权窗），结束后再恢复悬浮气泡——
+      // 避免两个权限弹窗同时弹出，气泡窗口也不会抢在主窗口之前创建导致 z-order 异常。
       // 落盘偏好是唯一真相源——上次用户开过就自动重建，否则保持关闭。
-      this.restoreBubbleIfNeeded();
-      // 首次冷启动申请一次剪贴板读取权限。用偏好位避免反复弹窗；拒绝后不再骚扰，
-      // 用户日后去系统设置补授权，下次回前台会被 hasPermission() 检测到自动恢复收录。
-      this.ensureClipboardPermission();
+      this.ensureClipboardPermission().finally(() => {
+        this.restoreBubbleIfNeeded();
+      });
     });
   }
 
@@ -97,7 +98,7 @@ export default class EntryAbility extends UIAbility {
    * 失败时回写偏好为 false，避免下次启动又白跑一遍并保持开关与实际状态一致。
    */
   private async restoreBubbleIfNeeded(): Promise<void> {
-    const on: boolean = StorageManager.getInstance().getBool(Const.KEY_FLOAT_BUBBLE, false);
+    const on: boolean = StorageManager.getInstance().getBool(Const.KEY_FLOAT_BUBBLE, true);
     if (!on) {
       return;
     }
@@ -163,7 +164,7 @@ export default class EntryAbility extends UIAbility {
   }
 
   onDestroy(): void {
-    const on: boolean = StorageManager.getInstance().getBool(Const.KEY_FLOAT_BUBBLE, false);
+    const on: boolean = StorageManager.getInstance().getBool(Const.KEY_FLOAT_BUBBLE, true);
     if (on) {
       BubbleWindowManager.get().destroy();
     }

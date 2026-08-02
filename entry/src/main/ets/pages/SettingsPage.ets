@@ -26,7 +26,7 @@ export struct SettingsPage {
 
   aboutToAppear(): void {
     // 落盘值是唯一真相源：每次进设置页用偏好值刷新 AppStorage，覆盖上次进程残留。
-    this.floatBubble = this.sm.getBool(Const.KEY_FLOAT_BUBBLE, false);
+    this.floatBubble = this.sm.getBool(Const.KEY_FLOAT_BUBBLE, true);
     this.dedupe = this.sm.getBool(Const.KEY_DEDUPE, true);
     this.haptic = this.sm.getBool(Const.KEY_HAPTIC, true);
     this.maxRecords = this.sm.getNumber(Const.KEY_MAX, Const.DEFAULT_MAX);

@@ -20,7 +20,6 @@ import { DockEngine, DockSide, DockState, PanelAnchor } from './DockEngine';
 import { ClipboardPanel } from './ClipboardPanel';
 import { ClipItem } from './ClipItem';
 import { AppKeys } from './AppKeys';
-import { I18n } from '../common/I18n';
 
 const TAG: string = 'CopyBubble/Float';
 const DOMAIN: number = 0x1001;
@@ -48,10 +47,8 @@ export struct FloatBubble {
   @StorageLink(AppKeys.BUBBLE_DRAGGING) @Watch('onDraggingChange') sigDragging: boolean = false;
   /** 点击信号，每 +1 一次，触发 handleTap（开/关面板）*/
   @StorageLink(AppKeys.BUBBLE_TAP) @Watch('onTapSignal') sigTap: number = 0;
-  /** 是否进入隐藏吸入区（视觉层高亮提示用）*/
+  /** 是否进入隐藏吸入区（拖拽结束时据此触发 hideBubble）*/
   @StorageLink(AppKeys.BUBBLE_DISMISS_ARMED) sigDismissArmed: boolean = false;
-  /** 是否显示底部吸入区提示 */
-  @StorageLink(AppKeys.BUBBLE_DISMISS_VISIBLE) sigDismissVisible: boolean = false;
 
   /** 视觉层可触摸性切换回调：面板展开时需临时开触摸接收行点击 */
   onViewTouchableChange: (touchable: boolean) => void = () => {};
@@ -70,7 +67,7 @@ export struct FloatBubble {
   @State private anchor: PanelAnchor =
     { x: 0, y: 0, w: BubbleSize.PANEL_W, h: 120, originX: 1, originY: 0.5 };
   // 气泡外观渲染在交互层窗口（BubbleTouchPage）。视觉层不再渲染气泡本体，
-  // 只渲染面板和 dismissZone。低频状态（停靠侧、状态、条数）通过
+  // 只渲染面板。低频状态（停靠侧、状态、条数）通过
   // syncBubbleVisual() 写 AppStorage 同步给交互层渲染气泡外观。
   // 动画不同步：跨窗口只能传到终值，波纹这类动画必须由交互层本地跑。
   // 视觉层窗口常驻全屏（见 DockEngine.windowRect），左上角恒为屏幕原点 (0,0)，
@@ -277,25 +274,7 @@ export struct FloatBubble {
   /* ---------------- 视图 ---------------- */
 
   // 气泡本体（bubbleView）已移到交互层窗口（BubbleTouchPage）渲染。
-  // 视觉层只保留面板和 dismissZone。
-
-  @Builder
-  dismissZone() {
-    Row({ space: 6 }) {
-      Text(I18n.t('dismiss_hint'))
-        .fontSize(11)
-        .fontColor(this.sigDismissArmed ? '#FFFFFF' : BubbleColor.DISMISS)
-        .fontWeight(FontWeight.Medium)
-    }
-    .padding({ left: 16, right: 16, top: 9, bottom: 9 })
-    .borderRadius(100)
-    .backgroundColor(this.sigDismissArmed ? BubbleColor.DISMISS : '#DB080C1B')
-    .border({ width: 1, color: '#59FF6B7A' })
-    .scale({ x: this.sigDismissArmed ? 1.1 : 1, y: this.sigDismissArmed ? 1.1 : 1 })
-    .opacity(this.sigDismissVisible ? 1 : 0)
-    .animation({ duration: 220, curve: curves.cubicBezierCurve(0.2, 0.9, 0.3, 1.2) })
-    .hitTestBehavior(HitTestMode.None)
-  }
+  // 视觉层只保留面板。
 
   build() {
     Stack({ alignContent: Alignment.TopStart }) {
@@ -325,18 +304,7 @@ export struct FloatBubble {
       }
 
       // 气泡本体不在这里渲染——它在交互层窗口（BubbleTouchPage）里，跟窗口原生移动。
-      // 视觉层只渲染面板和 dismissZone（低频更新的内容）。
-
-      if (this.sigDismissVisible) {
-        Column() {
-          this.dismissZone()
-        }
-        .width('100%')
-        .height('100%')
-        .justifyContent(FlexAlign.End)
-        .padding({ bottom: 26 })
-        .hitTestBehavior(HitTestMode.None)
-      }
+      // 视觉层只渲染面板（低频更新的内容）。
     }
     .width('100%')
     .height('100%')

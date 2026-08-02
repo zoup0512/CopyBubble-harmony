@@ -36,8 +36,6 @@ struct BubbleTouchPage {
   @StorageLink(AppKeys.BUBBLE_TAP) tapTick: number = 0;
   /** 是否进入隐藏吸入区 */
   @StorageLink(AppKeys.BUBBLE_DISMISS_ARMED) dismissArmed: boolean = false;
-  /** 是否显示底部吸入区提示 */
-  @StorageLink(AppKeys.BUBBLE_DISMISS_VISIBLE) dismissVisible: boolean = false;
   /** 气泡状态（视觉层写，本组件读以渲染外观形变）*/
   @StorageLink(AppKeys.BUBBLE_STATE) state: string = DockState.Docked;
   /** 停靠侧 */
@@ -231,14 +229,12 @@ struct BubbleTouchPage {
             this.bubbleY = this.engine.clampDragY(this.dragOriginY + this.dragAccY);
             // 只在气泡接近窗口边缘时才 moveWindowTo（低频），否则靠 position 移动
             this.recenterIfNeeded();
-            this.dismissVisible = true;
             this.dismissArmed = this.engine.inDismissZone(this.bubbleX, this.bubbleY);
           })
           .onActionEnd(() => {
             hilog.info(DOMAIN, TAG,
               `drag END at (${this.bubbleX},${this.bubbleY}) dismissArmed=${this.dismissArmed}`);
             this.dragging = false;
-            this.dismissVisible = false;
           }),
         TapGesture({ count: 1 })
           .onAction(() => {

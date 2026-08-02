@@ -50,6 +50,7 @@ export class I18n {
     ['source_clipboard', '剪贴板'],
     ['source_paste', '粘贴按钮'],
     ['source_manual', '手动输入'],
+    ['source_help', '内置'],
 
     // ---------- 卡片 ----------
     ['pinned_tag', '置顶'],
@@ -145,14 +146,21 @@ export class I18n {
     ['tag_code', '码'],
     ['tag_text', '文'],
 
-    // ---------- 拖拽隐藏 ----------
-    ['dismiss_hint', '拖到这里隐藏'],
-
     // ---------- 评分反馈弹窗 ----------
     ['dialog_feedback_title', '体验反馈'],
     ['dialog_feedback_message', '感谢你的支持，如果用着还不错，不妨去应用市场给个好评鼓励一下'],
     ['dialog_feedback_later', '以后再说'],
-    ['dialog_feedback_rate', '去评价']
+    ['dialog_feedback_rate', '去评价'],
+
+    // ---------- 内置使用说明 ----------
+    ['help_guide', `随手贴 · 使用说明
+
+1. 复制任意文本，回到这里会自动收录
+2. 点击卡片即可复制回剪贴板
+3. 长按可置顶常用内容，置顶内容不会被清空
+4. 顶部可按类型筛选（链接 / 验证码 / 电话 / 邮箱 / 文本）
+5. 在「设置」开启桌面悬浮气泡，可在其他应用上方随手取用最近几条
+6. 所有数据仅保存在本机，不会上传`]
   ]);
 
   private static readonly EN: Map<string, string> = new Map<string, string>([
@@ -195,6 +203,7 @@ export class I18n {
     ['source_clipboard', 'Clipboard'],
     ['source_paste', 'Paste button'],
     ['source_manual', 'Manual input'],
+    ['source_help', 'Built-in'],
 
     // ---------- Card ----------
     ['pinned_tag', 'Pinned'],
@@ -290,14 +299,21 @@ export class I18n {
     ['tag_code', '#'],
     ['tag_text', 'T'],
 
-    // ---------- Drag to hide ----------
-    ['dismiss_hint', 'Drag here to hide'],
-
     // ---------- Feedback / rating dialog ----------
     ['dialog_feedback_title', 'Enjoying Copy Bubble?'],
     ['dialog_feedback_message', 'Thanks for your support! If you like the app, please consider leaving us a rating in the AppGallery.'],
     ['dialog_feedback_later', 'Later'],
-    ['dialog_feedback_rate', 'Rate Now']
+    ['dialog_feedback_rate', 'Rate Now'],
+
+    // ---------- Built-in usage guide ----------
+    ['help_guide', `Copy Bubble · Quick Guide
+
+1. Copy any text and return here — it's captured automatically
+2. Tap a card to copy it back to the clipboard
+3. Long-press to pin favorites; pinned items are never cleared
+4. Filter by type at the top (Link / Code / Phone / Email / Text)
+5. Enable the floating bubble in Settings to access recent clips over any app
+6. All data stays on this device — nothing is uploaded`]
   ]);
 
   /** 启动时调一次，按系统语言选定文案表 */

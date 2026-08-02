@@ -30,10 +30,8 @@ export class AppKeys {
   static readonly BUBBLE_DRAGGING: string = 'cb_bubble_dragging';
   /** 自增计数，每 +1 表示发生一次点击，视觉层消费（开/关面板） */
   static readonly BUBBLE_TAP: string = 'cb_bubble_tap';
-  /** 交互层是否进入隐藏吸入区，视觉层据此高亮提示 */
+  /** 交互层是否进入隐藏吸入区，拖拽结束时视觉层据此触发 hideBubble */
   static readonly BUBBLE_DISMISS_ARMED: string = 'cb_bubble_dismiss_armed';
-  /** 拖拽期间是否显示底部吸入区提示 */
-  static readonly BUBBLE_DISMISS_VISIBLE: string = 'cb_bubble_dismiss_visible';
   /** 气泡当前状态（free/docked/dozing/expanded/hidden），交互层据此渲染气泡外观 */
   static readonly BUBBLE_STATE: string = 'cb_bubble_state';
   /** 气泡停靠侧 'L'/'R'，交互层据此决定贴边形变方向 */
