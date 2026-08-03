@@ -6,9 +6,10 @@
  *   视觉层（viewWin，copy_bubble_view）：常驻全屏、不可触摸。渲染气泡外观、
  *     面板、波纹等所有纯视觉内容。setWindowTouchable(false) 让触摸整窗穿透到
  *     下层 app，全屏也不挡下层。永不 resize（创建时铺满一次）→ 永不闪。
- *   交互层（touchWin，copy_bubble_touch）：48×48、可触摸。透明的手势热区，
+ *   交互层（touchWin，copy_bubble_touch）：112×112、可触摸。透明的手势热区，
  *     承载 PanGesture/TapGesture。只 moveWindowTo 跟随气泡（不 resize）→ 不闪；
- *     只挡气泡那 48×48，下层 app 在气泡之外完全可点。
+ *     贴边时窗口向屏外顶出，屏幕内只挡气泡附近 50×112 的小块，下层 app 在
+ *     气泡之外完全可点。
  *
  * 为什么不能单窗口：窗口 resize 会让 WMS 重建 surface，中间帧覆盖整屏 = 桌面闪
  * （应用层无法消除）；而 PanGesture 手指出窗会断触、TYPE_FLOAT 无法局部触摸穿透，
@@ -96,7 +97,7 @@ export class BubbleWindowManager {
       await vw.resize(vp2px(s.w), vp2px(s.h));
       await vw.showWindow();
 
-      // ---- 交互层：48×48、可触摸、跟随气泡 ----
+      // ---- 交互层：112×112、可触摸、跟随气泡 ----
       // 必须在视觉层之后创建：后创建的 TYPE_FLOAT 默认 z-order 更高，交互层要
       // 在视觉层之上才能收到触摸。
       const touchCfg: window.Configuration = {
@@ -106,15 +107,17 @@ export class BubbleWindowManager {
       };
       const tw: window.Window = await window.createWindow(touchCfg);
       this.touchWin = tw;
-      // 交互层窗口尺寸：3×3 气泡热区。气泡在窗口内用 .position() 移动
-      // （ArkUI 原生渲染，无 WMS 异步振荡），只在气泡接近窗口边缘时才 moveWindowTo
-      // 重新居中——从每帧 60+ 次降到整个拖拽过程数次，消除高频 moveWindowTo 振荡。
+      // 交互层窗口尺寸：气泡 48 + 两侧留白 16×2 + 行程余量 32（见 BubbleSize.TOUCH_WIN）。
+      // 气泡在窗口内用 .position() 移动（ArkUI 原生渲染，无 WMS 异步振荡），
+      // 只在气泡接近窗口边缘时才 moveWindowTo 重新居中/顶出——从每帧 60+ 次降到
+      // 整个拖拽过程数次，消除高频 moveWindowTo 振荡。
       await tw.resize(vp2px(BubbleSize.TOUCH_WIN), vp2px(BubbleSize.TOUCH_WIN));
       await tw.moveWindowTo(vp2px(s.w), vp2px(0));
       await tw.setUIContent('pages/BubbleTouchPage');
       tw.setWindowBackgroundColor('#00000000');
       await tw.setWindowLayoutFullScreen(false);
-      // 可触摸：承载 Pan/Tap 手势。窗口 144×144，比气泡大但远小于全屏，下层大部分可点。
+      // 可触摸：承载 Pan/Tap 手势。窗口 112×112，贴边时一半伸出屏幕、屏幕内只挡
+      // 气泡附近的小块，下层大部分可点。
       tw.setWindowTouchable(true);
       await tw.setWindowFocusable(false);
       await tw.showWindow();

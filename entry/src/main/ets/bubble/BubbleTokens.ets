@@ -14,10 +14,14 @@ export class BubbleSize {
   static readonly PEEK_DOCKED: number = 34;
   /** 触控热区，恒定不随视觉露出收缩 */
   static readonly HIT_AREA: number = 48;
-  /** 交互层窗口边长（3×3 气泡热区）。气泡在窗口内用 position 移动，
-   *  只在接近窗口边缘时才 moveWindowTo 重新居中，以此压掉高频 WMS 振荡。
+  /** 交互层窗口边长。气泡在窗口内用 position 移动（ArkUI 原生渲染），
+   *  只在气泡接近窗口边缘时才 moveWindowTo 重新居中，以此压掉高频 WMS 振荡。
+   *  尺寸权衡：越大拖拽越稳（手指不易出窗断触），越小遮挡下层点击越少。
+   *  112 = 气泡 48 + 两侧边缘留白 16×2 + 行程余量 32：贴边时窗口向屏外顶出，
+   *  屏幕内遮挡 50×112（144 时代是 82×144，缩小约一半）；普通拖拽
+   *  （<1000vp/s）下异步追窗 1-2 帧手指仍不出窗。
    *  BubbleWindowManager 建窗与 BubbleTouchPage 定位共用此值，不可各写一份。 */
-  static readonly TOUCH_WIN: number = 144;
+  static readonly TOUCH_WIN: number = 112;
   /** 展开面板宽度，约 13 个汉字 */
   static readonly PANEL_W: number = 226;
   /** 面板与气泡间距 */

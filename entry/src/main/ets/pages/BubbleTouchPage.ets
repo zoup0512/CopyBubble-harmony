@@ -36,10 +36,11 @@ struct BubbleTouchPage {
   @StorageLink(AppKeys.BUBBLE_TAP) tapTick: number = 0;
   /** 是否进入隐藏吸入区 */
   @StorageLink(AppKeys.BUBBLE_DISMISS_ARMED) dismissArmed: boolean = false;
-  /** 气泡状态（视觉层写，本组件读以渲染外观形变）*/
-  @StorageLink(AppKeys.BUBBLE_STATE) state: string = DockState.Docked;
+  /** 气泡状态（视觉层写，本组件读以渲染外观形变）。停靠/吸附/展开时窗口向屏外
+   *  顶出（见 centerWindowOn），状态边沿必须重新定位窗口 */
+  @StorageLink(AppKeys.BUBBLE_STATE) @Watch('onStateSideChange') state: string = DockState.Docked;
   /** 停靠侧 */
-  @StorageLink(AppKeys.BUBBLE_SIDE) side: string = DockSide.Right;
+  @StorageLink(AppKeys.BUBBLE_SIDE) @Watch('onStateSideChange') side: string = DockSide.Right;
   /** 记录条数（角标用）*/
   @StorageLink(AppKeys.BUBBLE_ITEM_COUNT) itemCount: number = 0;
   /**
@@ -63,8 +64,9 @@ struct BubbleTouchPage {
   /** 交互层窗口左上角的屏幕坐标 vp（气泡用 bubbleXY - winXY 得到窗口内偏移） */
   @State private winX: number = 0;
   @State private winY: number = 0;
-  /** 窗口需要居中时，气泡距窗口边缘的最小留白 vp，小于此值才 moveWindowTo */
-  private static readonly RECENTER_MARGIN: number = 24;
+  /** 窗口需要居中/顶出时，气泡距窗口边缘的最小留白 vp，小于此值才 moveWindowTo。
+   *  16 ≈ 1 帧 @1000vp/s：异步追窗一帧内气泡不至于顶到窗口边缘（出窗即断触） */
+  private static readonly RECENTER_MARGIN: number = 16;
 
   aboutToAppear(): void {
     // 交互层的拖拽钳制、底部吸入区判定全靠 engine，必须喂真实屏幕尺寸。
@@ -95,13 +97,33 @@ struct BubbleTouchPage {
     });
   }
 
-  /** 把交互层窗口居中在气泡当前位置（winXY = bubbleXY - winSize/2 + bubbleSize/2） */
+  /**
+   * 定位交互层窗口。贴边态（Docked/Snapping/Expanded）窗口向屏外方向顶到底：
+   * 气泡压到窗口内缘（局部坐标 = RECENTER_MARGIN 或 maxLocal），窗口伸出屏幕的
+   * 部分不挡下层，把屏幕内遮挡压到最小（右贴边时 50×112，居中则是 66×112）。
+   * 拖拽中（Free）必须居中：四周留白足够手指活动，追窗时才不会出窗断触。
+   */
   private centerWindowOn(): void {
-    const half: number = BubbleSize.TOUCH_WIN / 2;
+    const winHalf: number = BubbleSize.TOUCH_WIN / 2;
     const bubbleHalf: number = BubbleSize.HIT_AREA / 2;
-    this.winX = this.bubbleX + bubbleHalf - half;
-    this.winY = this.bubbleY + bubbleHalf - half;
+    if (this.state === DockState.Docked || this.state === DockState.Snapping ||
+      this.state === DockState.Expanded) {
+      const maxLocal: number = BubbleSize.TOUCH_WIN - BubbleSize.HIT_AREA -
+        BubbleTouchPage.RECENTER_MARGIN;
+      // 右贴边窗口往右顶（气泡在局部左侧内缘），左贴边往左顶（气泡在右侧内缘）
+      this.winX = this.side === DockSide.Right
+        ? this.bubbleX - BubbleTouchPage.RECENTER_MARGIN
+        : this.bubbleX - maxLocal;
+    } else {
+      this.winX = this.bubbleX + bubbleHalf - winHalf;
+    }
+    this.winY = this.bubbleY + bubbleHalf - winHalf;
     this.mgr.moveTouchWindow(this.winX, this.winY);
+  }
+
+  /** 停靠态/停靠侧变化（吸附完成、面板开关）：按新的贴边几何重新顶出窗口 */
+  private onStateSideChange(): void {
+    this.centerWindowOn();
   }
 
   /**
