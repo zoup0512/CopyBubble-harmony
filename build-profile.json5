@@ -18,13 +18,13 @@
         "name": "release",
         "type": "HarmonyOS",
         "material": {
-          "certpath": "./entry/sign/release/release-CopyBubble.cer",
-          "keyAlias": "debugKey",
-          "keyPassword": "x121169225",
-          "profile": "./entry/sign/release/profile-CopyBubble-20260803Release.p7b",
-          "signAlg": "SHA256withECDSA",
           "storeFile": "./entry/sign/release/release-copy_bubble.p12",
-          "storePassword": "x121169225"
+          "storePassword": "0000001A8DDAEB444743D201114662A7296C364A80F58BF9EE7F59CAB9409634C75A6F004301AAB2B6FD",
+          "keyAlias": "debugKey",
+          "keyPassword": "0000001AEF96219CD10EB65915F68750BBC7CA67CFEB243DD32FBA6BD56166F108A86703252E54C74C22",
+          "signAlg": "SHA256withECDSA",
+          "profile": "./entry/sign/release/Profile_CopyBubble_20260804Release.p7b",
+          "certpath": "./entry/sign/release/release-CopyBubble.cer"
         }
       }
     ],
