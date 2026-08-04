@@ -209,8 +209,9 @@ struct BubbleTouchPage {
         count: this.itemCount,
         onLeft: this.side === DockSide.Right,
         visible: this.itemCount > 0,
-        scaleRatio: BubbleSize.SCALE
+        scaleRatio: BubbleSize.BADGE_SCALE
       })
+        // 挂角偏移跟气泡走（SCALE），角标自身大小跟 BADGE_SCALE 走（见 BubbleBadge）
         .position(this.side === DockSide.Right
           ? { x: -3 * BubbleSize.SCALE, y: -3 * BubbleSize.SCALE }
           : { x: BubbleSize.BUBBLE - 13 * BubbleSize.SCALE, y: -3 * BubbleSize.SCALE })
