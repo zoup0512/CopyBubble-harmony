@@ -208,11 +208,12 @@ struct BubbleTouchPage {
       BubbleBadge({
         count: this.itemCount,
         onLeft: this.side === DockSide.Right,
-        visible: this.itemCount > 0
+        visible: this.itemCount > 0,
+        scaleRatio: BubbleSize.SCALE
       })
         .position(this.side === DockSide.Right
-          ? { x: -3, y: -3 }
-          : { x: BubbleSize.BUBBLE - 13, y: -3 })
+          ? { x: -3 * BubbleSize.SCALE, y: -3 * BubbleSize.SCALE }
+          : { x: BubbleSize.BUBBLE - 13 * BubbleSize.SCALE, y: -3 * BubbleSize.SCALE })
     }
     .width(BubbleSize.HIT_AREA)
     .height(BubbleSize.HIT_AREA)

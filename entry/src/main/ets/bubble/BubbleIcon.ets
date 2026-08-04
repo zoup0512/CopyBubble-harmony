@@ -57,12 +57,15 @@ export struct BubbleIcon {
 /**
  * 计数角标。贴右边时自动移到左上角，
  * 否则数字会被气泡自己藏进屏幕外 —— 这是唯一一处随 side 镜像的装饰。
+ * scaleRatio 与 BubbleIcon 一致：1 对应 48vp 气泡，缩放后角标字号/尺寸同比例收缩。
  */
 @Component
 export struct BubbleBadge {
   @Prop count: number = 0;
   @Prop onLeft: boolean = false;
   @Prop visible: boolean = true;
+  /** 角标整体缩放，1 对应 48vp 气泡 */
+  @Prop scaleRatio: number = 1;
 
   private label(): string {
     if (this.count > 99) {
@@ -73,17 +76,17 @@ export struct BubbleBadge {
 
   build() {
     Text(this.label())
-      .fontSize(10)
+      .fontSize(10 * this.scaleRatio)
       .fontWeight(FontWeight.Medium)
       .fontColor(BubbleColor.BADGE_FG)
       .textAlign(TextAlign.Center)
-      .constraintSize({ minWidth: 16 })
-      .height(16)
-      .padding({ left: 4, right: 4 })
+      .constraintSize({ minWidth: 16 * this.scaleRatio })
+      .height(16 * this.scaleRatio)
+      .padding({ left: 4 * this.scaleRatio, right: 4 * this.scaleRatio })
       .backgroundColor(BubbleColor.BADGE_BG)
-      .borderRadius(8)
-      .border({ width: 2, color: '#E6FFFFFF' })
-      .scale({ x: this.visible ? 1 : 0, y: this.visible ? 1 : 0 })
+      .borderRadius(8 * this.scaleRatio)
+      .border({ width: 2 * this.scaleRatio, color: '#E6FFFFFF' })
+      .scale({ x: this.visible ? this.scaleRatio : 0, y: this.visible ? this.scaleRatio : 0 })
       .opacity(this.visible ? 1 : 0)
       .animation({ duration: 300, curve: curves.springMotion(0.3, 0.9) })
   }
