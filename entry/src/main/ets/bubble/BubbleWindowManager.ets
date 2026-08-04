@@ -37,7 +37,7 @@ export class BubbleWindowManager {
   private static instance: BubbleWindowManager | undefined = undefined;
   /** 视觉层：全屏、不可触摸，纯渲染 */
   private viewWin: window.Window | undefined = undefined;
-  /** 交互层：48×48、可触摸，承载手势 */
+  /** 交互层：TOUCH_WIN×TOUCH_WIN、可触摸，承载手势 */
   private touchWin: window.Window | undefined = undefined;
   private ctx: common.UIAbilityContext | undefined = undefined;
   /** moveTouchWindow 去重：上一次 moveWindowTo 未完成时只记最新目标，完成后补一次 */
@@ -107,7 +107,7 @@ export class BubbleWindowManager {
       };
       const tw: window.Window = await window.createWindow(touchCfg);
       this.touchWin = tw;
-      // 交互层窗口尺寸：气泡 48 + 两侧留白 16×2 + 行程余量 32（见 BubbleSize.TOUCH_WIN）。
+      // 交互层窗口尺寸：见 BubbleSize.TOUCH_WIN（气泡直径 × SCALE + 两侧留白 + 行程余量）。
       // 气泡在窗口内用 .position() 移动（ArkUI 原生渲染，无 WMS 异步振荡），
       // 只在气泡接近窗口边缘时才 moveWindowTo 重新居中/顶出——从每帧 60+ 次降到
       // 整个拖拽过程数次，消除高频 moveWindowTo 振荡。

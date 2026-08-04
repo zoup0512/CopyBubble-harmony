@@ -5,12 +5,12 @@
         "name": "default",
         "type": "HarmonyOS",
         "material": {
-          "certpath": "C:\\Users\\24790\\.ohos\\config\\default_CopyBubble-harmony_fPG8r0ceElVwhu6nq5K9b7GmPoR6Dwd-Wb-_eelZThg=.cer",
+          "certpath": "./entry/sign/debug/debug-CopyBubble.cer",
           "keyAlias": "debugKey",
           "keyPassword": "0000001B653BAD6AC8BC741FE3255EDF38923A23E71DE9466677FFA1C9D6658A58B3FBD7E9549A204F660E",
-          "profile": "C:\\Users\\24790\\.ohos\\config\\default_CopyBubble-harmony_fPG8r0ceElVwhu6nq5K9b7GmPoR6Dwd-Wb-_eelZThg=.p7b",
+          "profile": "./entry/sign/debug/debug-CopyBubble.p7b",
           "signAlg": "SHA256withECDSA",
-          "storeFile": "C:\\Users\\24790\\.ohos\\config\\default_CopyBubble-harmony_fPG8r0ceElVwhu6nq5K9b7GmPoR6Dwd-Wb-_eelZThg=.p12",
+          "storeFile": "./entry/sign/debug/debug-copy_bubble.p12",
           "storePassword": "0000001B2FEA8979EE9CA44C0973440010F936FA27231C61DD452E2D03338ED40CED4CD79A66BE647E57A2"
         }
       },

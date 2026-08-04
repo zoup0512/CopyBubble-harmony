@@ -26,6 +26,12 @@ signing.properties
 *.jks
 *.keystore
 secret.key
+# Keep committed signing materials under entry/sign/ (debug + release)
+!entry/sign/
+!entry/sign/**
+!entry/sign/**/*.p12
+!entry/sign/**/*.jks
+!entry/sign/**/*.keystore
 *.log
 *.tmp
 *.dump

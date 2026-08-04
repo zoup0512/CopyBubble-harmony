@@ -169,7 +169,7 @@ struct BubbleTouchPage {
       // 气泡本体
       Stack({ alignContent: Alignment.Center }) {
         BubbleIcon({
-          scaleRatio: 1,
+          scaleRatio: BubbleSize.SCALE,
           ghostVisible: true,
           shiftX: this.isDockedShape()
             ? (this.side === DockSide.Left
