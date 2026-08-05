@@ -106,6 +106,9 @@ struct BubbleWindowPage {
           this.mgr.destroy();
           BubbleBridge.hooks.onClose();
         },
+        onCapture: () => {
+          BubbleBridge.hooks.onCapture();
+        },
         onDockChange: (side: DockSide, y: number) => {
           BubbleBridge.hooks.onDockChange(side, y);
         }

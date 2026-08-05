@@ -8,6 +8,7 @@ import { Theme, Const } from '../common/Theme';
 import { KVParam } from '../common/UiModels';
 import { SwitchRow } from '../components/SwitchRow';
 import { AppKeys } from '../bubble/AppKeys';
+import { AccessibilityMonitor } from '../accessibility/AccessibilityMonitor';
 import { I18n } from '../common/I18n';
 
 @Component
@@ -18,6 +19,9 @@ export struct SettingsPage {
   // @StorageLink 绑 AppKeys.BUBBLE_RUNNING：气泡内拨开关关闭时写 AppStorage，
   // 设置页能实时收到 OFF；落盘值在 aboutToAppear 里灌进 AppStorage 作为初值。
   @StorageLink(AppKeys.BUBBLE_RUNNING) floatBubble: boolean = false;
+  /** 无障碍服务就绪状态与最近一次抓取结果，由 AccessibilityMonitor 写 AppStorage */
+  @StorageLink(AccessibilityMonitor.KEY_READY) a11yReady: boolean = false;
+  @StorageLink(AccessibilityMonitor.KEY_LAST) a11yLast: string = '';
   @State private dedupe: boolean = true;
   @State private haptic: boolean = true;
   @State private maxRecords: number = Const.DEFAULT_MAX;
@@ -64,6 +68,12 @@ export struct SettingsPage {
                 value: this.haptic,
                 onChange: (v: boolean) => this.setBool(Const.KEY_HAPTIC, v)
               })
+            }
+            .width('100%')
+
+            Column({ space: 0 }) {
+              this.SectionTitle(I18n.t('section_a11y'))
+              this.A11yCard()
             }
             .width('100%')
 
@@ -120,6 +130,44 @@ export struct SettingsPage {
       .fontColor(Theme.TEXT_3)
       .width('100%')
       .padding({ left: 4, bottom: 8 })
+  }
+
+  @Builder
+  A11yCard() {
+    Column({ space: 10 }) {
+      Row() {
+        Text(I18n.t('a11y_status_title'))
+          .fontSize(13)
+          .fontColor(Theme.TEXT_2)
+        Blank()
+        Text(this.a11yReady ? I18n.t('a11y_status_on') : I18n.t('a11y_status_off'))
+          .fontSize(13)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(this.a11yReady ? Theme.BRAND : Theme.TEXT_3)
+      }
+      .width('100%')
+
+      Text(I18n.t('a11y_howto'))
+        .fontSize(12)
+        .lineHeight(18)
+        .fontColor(Theme.TEXT_2)
+        .width('100%')
+
+      if (this.a11yLast !== '') {
+        Text(this.a11yLast)
+          .fontSize(11)
+          .lineHeight(16)
+          .fontColor(Theme.TEXT_2)
+          .width('100%')
+          .padding(10)
+          .backgroundColor('#F2F2F8')
+          .borderRadius(10)
+      }
+    }
+    .width('100%')
+    .padding(16)
+    .backgroundColor(Theme.CARD_BG)
+    .borderRadius(16)
   }
 
   @Builder

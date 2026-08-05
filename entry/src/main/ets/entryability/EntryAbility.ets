@@ -1,5 +1,5 @@
 import { AbilityConstant, UIAbility, Want, common } from '@kit.AbilityKit';
-import { window } from '@kit.ArkUI';
+import { promptAction, window } from '@kit.ArkUI';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { BusinessError } from '@kit.BasicServicesKit';
 import { StorageManager } from '../manager/StorageManager';
@@ -10,6 +10,7 @@ import { BubbleWindow as BubbleWindowLegacy } from '../manager/BubbleWindow_lega
 import { BubbleBridge, BubbleAdapter } from '../bubble/BubbleBridge';
 import { ClipItem as BubbleClipItem } from '../bubble/ClipItem';
 import { AppKeys } from '../bubble/AppKeys';
+import { AccessibilityMonitor, DumpResult } from '../accessibility/AccessibilityMonitor';
 import { Const } from '../common/Theme';
 import { I18n } from '../common/I18n';
 
@@ -56,6 +57,38 @@ export default class EntryAbility extends UIAbility {
       onClose: (): void => {
         StorageManager.getInstance().put(Const.KEY_FLOAT_BUBBLE, false);
         AppStorage.setOrCreate(AppKeys.BUBBLE_RUNNING, false);
+      },
+      // 用户在面板里点了「识屏」：无障碍服务抓当前页面文字 → 写回剪贴板并收录
+      onCapture: (): void => {
+        AccessibilityMonitor.dumpNow().then((r: DumpResult | null) => {
+          if (r === null) {
+            promptAction.showToast({
+              message: I18n.t('toast_capture_nosvc'),
+              duration: 2400
+            });
+            return;
+          }
+          if (r.error !== '' || r.texts.length === 0) {
+            promptAction.showToast({
+              message: r.error !== '' ? I18n.f('toast_capture_failed', r.error) : I18n.t('toast_capture_empty'),
+              duration: 2400
+            });
+            return;
+          }
+          const text: string = r.texts.join('\n');
+          ClipboardKit.write(text);
+          ClipStore.getInstance().add(text, I18n.t('source_screen'));
+          promptAction.showToast({
+            message: I18n.f('toast_capture_ok', r.bundle !== '' ? r.bundle : I18n.t('source_screen')),
+            duration: 2000
+          });
+        }).catch((e: BusinessError) => {
+          hilog.error(DOMAIN, TAG, `onCapture failed ${e.code} ${e.message}`);
+          promptAction.showToast({
+            message: I18n.t('toast_capture_empty'),
+            duration: 2000
+          });
+        });
       },
       // 停靠位置变化，不需要持久化则留空
       onDockChange: (): void => {

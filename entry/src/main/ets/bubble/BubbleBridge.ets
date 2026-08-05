@@ -36,6 +36,8 @@ export interface BubbleHooks {
   onHidden: () => void;
   /** 用户在面板里拨开关彻底关闭了悬浮球。通常持久化关闭状态。 */
   onClose: () => void;
+  /** 用户在面板里点了「识屏」：抓取当前页面文本（无障碍服务，原型功能）。 */
+  onCapture: () => void;
   /** 气泡停靠位置变了，可用于持久化。 */
   onDockChange: (side: DockSide, y: number) => void;
 }
@@ -55,6 +57,10 @@ class DefaultHooks implements BubbleHooks {
 
   onClose(): void {
     console.info('CopyBubble closed');
+  }
+
+  onCapture(): void {
+    console.info('CopyBubble capture requested');
   }
 
   onDockChange(side: DockSide, y: number): void {

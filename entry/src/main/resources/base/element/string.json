@@ -6,6 +6,8 @@
     { "name": "reason_float_window", "value": "Show a draggable copy bubble over other apps" },
     { "name": "reason_background", "value": "Keep receiving clipboard changes in background" },
     { "name": "reason_vibrate", "value": "Light vibration feedback when copying succeeds" },
-    { "name": "reason_read_clipboard", "value": "Read the system clipboard to capture copied content" }
+    { "name": "reason_read_clipboard", "value": "Read the system clipboard to capture copied content" },
+    { "name": "accessibility_service_label", "value": "Copy Bubble Capture" },
+    { "name": "accessibility_service_desc", "value": "Reads text shown on the screen so you can capture page content into the clipboard with one tap" }
   ]
 }

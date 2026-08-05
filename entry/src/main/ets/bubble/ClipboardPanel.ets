@@ -23,6 +23,8 @@ export struct ClipboardPanel {
   onPick: (item: ClipItem) => void = () => {};
   /** header 右侧开关转 OFF 时彻底关闭悬浮球 */
   onClose: () => void = () => {};
+  /** header 左侧「识屏」按钮：抓取当前第三方页面的文字（无障碍服务，原型功能） */
+  onCapture: () => void = () => {};
 
   /** 最近一次点选的记录 id，用于高亮选中行 */
   @State private selectedId: string = '';
@@ -91,6 +93,14 @@ export struct ClipboardPanel {
           .fontSize(10)
           .fontColor(BubbleColor.PANEL_SUB)
           .letterSpacing(1.2)
+        Text(I18n.t('panel_capture'))
+          .fontSize(10)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(this.dark ? BubbleColor.PANEL_TEXT_DARK : BubbleColor.PANEL_TEXT)
+          .padding({ left: 8, right: 8, top: 3, bottom: 3 })
+          .borderRadius(8)
+          .backgroundColor(Color.Transparent)
+          .onClick(() => this.onCapture())
         Blank()
         Row({ space: 5 }) {
           Text(I18n.t('panel_close_bubble'))

@@ -49,6 +49,20 @@
             "resource": "$profile:backup_config"
           }
         ]
+      },
+      {
+        "name": "AccessibilityExtAbility",
+        "srcEntry": "./ets/accessibility/AccessibilityExtAbility.ets",
+        "label": "$string:accessibility_service_label",
+        "description": "$string:accessibility_service_desc",
+        "type": "accessibility",
+        "exported": true,
+        "metadata": [
+          {
+            "name": "ohos.accessibleability",
+            "resource": "$profile:accessibility_config"
+          }
+        ]
       }
     ],
     "requestPermissions": [

@@ -56,6 +56,8 @@ export struct FloatBubble {
   onHidden: () => void = () => {};
   /** 面板开关拨到 OFF：彻底关闭悬浮球（销毁双窗口） */
   onClose: () => void = () => {};
+  /** 面板「识屏」按钮：抓取当前页面文字（无障碍服务，原型功能） */
+  onCapture: () => void = () => {};
   onDockChange: (side: DockSide, y: number) => void = () => {};
 
   @State private state: DockState = DockState.Docked;
@@ -298,6 +300,9 @@ export struct FloatBubble {
           },
           onClose: () => {
             this.onClose();
+          },
+          onCapture: () => {
+            this.onCapture();
           }
         })
           .position({ x: this.anchor.x, y: this.anchor.y })

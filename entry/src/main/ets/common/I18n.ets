@@ -51,6 +51,19 @@ export class I18n {
     ['source_paste', '粘贴按钮'],
     ['source_manual', '手动输入'],
     ['source_help', '内置'],
+    ['source_screen', '屏幕抓取'],
+
+    // ---------- 识屏（无障碍原型） ----------
+    ['panel_capture', '识屏'],
+    ['toast_capture_ok', '已抓取 {0} 页面的文字'],
+    ['toast_capture_empty', '没有抓到文字'],
+    ['toast_capture_failed', '抓取失败：{0}'],
+    ['toast_capture_nosvc', '请先在系统设置「辅助功能」里开启随手贴识屏'],
+    ['section_a11y', '识屏原型（验证用）'],
+    ['a11y_status_title', '服务状态'],
+    ['a11y_status_on', '已开启'],
+    ['a11y_status_off', '未开启'],
+    ['a11y_howto', '开启：系统设置 → 辅助功能 → 随手贴识屏。开启后打开任意应用，点悬浮球里的「识屏」抓取页面文字。'],
 
     // ---------- 卡片 ----------
     ['pinned_tag', '置顶'],
@@ -204,6 +217,19 @@ export class I18n {
     ['source_paste', 'Paste button'],
     ['source_manual', 'Manual input'],
     ['source_help', 'Built-in'],
+    ['source_screen', 'Screen capture'],
+
+    // ---------- Screen capture (accessibility prototype) ----------
+    ['panel_capture', 'Capture'],
+    ['toast_capture_ok', 'Captured text from {0}'],
+    ['toast_capture_empty', 'No text found'],
+    ['toast_capture_failed', 'Capture failed: {0}'],
+    ['toast_capture_nosvc', 'Enable "Copy Bubble Capture" in Settings > Accessibility first'],
+    ['section_a11y', 'Capture Prototype (testing)'],
+    ['a11y_status_title', 'Service status'],
+    ['a11y_status_on', 'Enabled'],
+    ['a11y_status_off', 'Disabled'],
+    ['a11y_howto', 'To enable: Settings > Accessibility > Copy Bubble Capture. Then open any app and tap Capture in the bubble panel.'],
 
     // ---------- Card ----------
     ['pinned_tag', 'Pinned'],
