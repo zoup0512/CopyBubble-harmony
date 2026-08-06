@@ -26,6 +26,8 @@ export class BubbleSize {
   static readonly SCALE: number = BUBBLE_SCALE;
   /** 角标整体缩放系数（供 BubbleBadge 读取以缩放角标，独立于气泡） */
   static readonly BADGE_SCALE: number = BADGE_SCALE;
+  /** 计数角标总开关：false 时所有状态下都不渲染（临时隐藏用，恢复改回 true） */
+  static readonly BADGE_VISIBLE: boolean = false;
   /** 气泡光学直径（基准 48 × BUBBLE_SCALE） */
   static readonly BUBBLE: number = 48 * BUBBLE_SCALE;
   /** 图形安全内圈直径，图形不得超出（基准 22 × BUBBLE_SCALE） */
