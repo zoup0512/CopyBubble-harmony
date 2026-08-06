@@ -3,8 +3,8 @@
     { "name": "module_desc", "value": "Copy Bubble 主模块" },
     { "name": "EntryAbility_desc", "value": "剪贴板气泡管理器" },
     { "name": "EntryAbility_label", "value": "随手贴" },
-    { "name": "reason_float_window", "value": "用于在其他应用之上显示可拖动的复制气泡" },
-    { "name": "reason_background", "value": "用于在后台持续接收剪贴板变化" },
+    { "name": "reason_float_window", "value": "用户在任何应用中复制文字后，应用在屏幕边缘显示一枚可拖动的悬浮气泡；无需切换应用，点击气泡即可展开剪贴板面板，查看并取用最近复制的内容。气泡支持贴边停靠，也可在设置中彻底关闭" },
+    { "name": "reason_background", "value": "应用退到后台后仍需持续监听系统剪贴板变化，自动收录用户新复制的内容，保证悬浮气泡随时展示最新条目，无需用户重新打开应用" },
     { "name": "reason_vibrate", "value": "用于复制成功时的轻震动反馈" },
     { "name": "reason_read_clipboard", "value": "读取系统剪贴板，收录复制的内容" }
   ]
