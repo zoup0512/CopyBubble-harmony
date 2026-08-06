@@ -9,6 +9,8 @@ export struct CategoryStrip {
   // @ObjectLink 监听 @Observed 对象的属性级变化，配合父组件「改 value 而非换引用」，
   // 计数变化才能可靠地传进来。原来用 @Prop Map 时 value 变化不会触发重渲染。
   @ObjectLink counts: CategoryCounts;
+  // 系统深浅色切换时重绘（Theme 色板按此取色）
+  @StorageProp(Theme.KEY_DARK_MODE) darkMode: boolean = false;
 
   build() {
     Scroll() {

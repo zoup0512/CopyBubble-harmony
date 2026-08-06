@@ -24,6 +24,8 @@ export struct HomeView {
   @StorageLink('foregroundTick') @Watch('onAppForeground') tick: number = 0;
   @StorageLink('topInset') topInset: number = 0;
   @StorageLink('bottomInset') bottomInset: number = 0;
+  // 系统深浅色切换时重绘（Theme 色板按此取色）
+  @StorageProp(Theme.KEY_DARK_MODE) darkMode: boolean = false;
 
   @State private list: ClipItem[] = [];
   // 切分类/搜索词必须立即重查列表：否则只在 store 变化时才 refresh，
@@ -388,8 +390,9 @@ export struct HomeView {
       TextArea({ text: $$this.draft, placeholder: I18n.t('compose_placeholder') })
         .placeholderColor(Theme.TEXT_3)
         .fontSize(15)
+        .fontColor(Theme.TEXT_1)
         .height(160)
-        .backgroundColor('#F5F5FA')
+        .backgroundColor(Theme.INPUT_BG)
         .borderRadius(14)
         .padding(12)
 
@@ -397,7 +400,7 @@ export struct HomeView {
         Button(I18n.t('btn_cancel'))
           .fontSize(15)
           .fontColor(Theme.TEXT_2)
-          .backgroundColor('#F0F0F6')
+          .backgroundColor(Theme.CANCEL_BG)
           .height(46)
           .layoutWeight(1)
           .onClick(() => { this.showCompose = false; })

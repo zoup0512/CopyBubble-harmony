@@ -49,7 +49,7 @@ export struct ClipboardPanel {
           .width('100%')
         Text(`${ClipUtil.kindLabel(item.kind)} · ${ClipUtil.ago(item.time)}`)
           .fontSize(9.5)
-          .fontColor(BubbleColor.PANEL_SUB)
+          .fontColor(this.dark ? BubbleColor.PANEL_SUB_DARK : BubbleColor.PANEL_SUB_LIGHT)
           .maxLines(1)
           .width('100%')
       }
@@ -77,7 +77,7 @@ export struct ClipboardPanel {
         .fontColor(this.dark ? BubbleColor.PANEL_TEXT_DARK : BubbleColor.PANEL_TEXT)
       Text(I18n.t('panel_empty_hint'))
         .fontSize(10)
-        .fontColor(BubbleColor.PANEL_SUB)
+        .fontColor(this.dark ? BubbleColor.PANEL_SUB_DARK : BubbleColor.PANEL_SUB_LIGHT)
     }
     .width('100%')
     .height(BubbleSize.PANEL_EMPTY_H)
@@ -89,13 +89,13 @@ export struct ClipboardPanel {
       Row() {
         Text(I18n.t('panel_header'))
           .fontSize(10)
-          .fontColor(BubbleColor.PANEL_SUB)
+          .fontColor(this.dark ? BubbleColor.PANEL_SUB_DARK : BubbleColor.PANEL_SUB_LIGHT)
           .letterSpacing(1.2)
         Blank()
         Row({ space: 5 }) {
           Text(I18n.t('panel_close_bubble'))
             .fontSize(10)
-            .fontColor(BubbleColor.PANEL_SUB)
+            .fontColor(this.dark ? BubbleColor.PANEL_SUB_DARK : BubbleColor.PANEL_SUB_LIGHT)
           // 彻底关闭悬浮球。打开时 ON，拨到 OFF 即销毁双窗口。
           Toggle({ type: ToggleType.Switch, isOn: true })
             .selectedColor(BubbleColor.GRAD_A)

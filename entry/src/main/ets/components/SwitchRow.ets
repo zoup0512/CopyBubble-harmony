@@ -15,6 +15,8 @@ export struct SwitchRow {
   @Prop title: string = '';
   @Prop desc: string = '';
   @Prop value: boolean = false;
+  // 系统深浅色切换时重绘（Theme 色板按此取色）
+  @StorageProp(Theme.KEY_DARK_MODE) darkMode: boolean = false;
   onChange: (v: boolean) => void = () => {};
 
   build() {

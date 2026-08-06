@@ -1,4 +1,4 @@
-import { AbilityConstant, UIAbility, Want, common } from '@kit.AbilityKit';
+import { AbilityConstant, UIAbility, Want, common, Configuration, ConfigurationConstant } from '@kit.AbilityKit';
 import { window } from '@kit.ArkUI';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { BusinessError } from '@kit.BasicServicesKit';
@@ -10,7 +10,7 @@ import { BubbleWindow as BubbleWindowLegacy } from '../manager/BubbleWindow_lega
 import { BubbleBridge, BubbleAdapter } from '../bubble/BubbleBridge';
 import { ClipItem as BubbleClipItem } from '../bubble/ClipItem';
 import { AppKeys } from '../bubble/AppKeys';
-import { Const } from '../common/Theme';
+import { Theme, Const } from '../common/Theme';
 import { I18n } from '../common/I18n';
 
 const TAG: string = 'CopyBubble/Ability';
@@ -18,6 +18,8 @@ const DOMAIN: number = 0x1001;
 
 export default class EntryAbility extends UIAbility {
   private tick: number = 0;
+  /** 主窗口引用：深浅色切换时重刷状态栏图标色用 */
+  private mainWindow: window.Window | undefined = undefined;
 
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
     hilog.info(DOMAIN, TAG, 'onCreate');
@@ -25,6 +27,38 @@ export default class EntryAbility extends UIAbility {
     AppStorage.setOrCreate('foregroundTick', 0);
     AppStorage.setOrCreate('topInset', 0);
     AppStorage.setOrCreate('bottomInset', 0);
+    // 首帧前把深浅色灌进 AppStorage，页面第一帧就能按正确色板渲染
+    this.syncColorMode(this.context.config);
+  }
+
+  onConfigurationUpdate(newConfig: Configuration): void {
+    hilog.info(DOMAIN, TAG, `onConfigurationUpdate colorMode=${newConfig.colorMode}`);
+    this.syncColorMode(newConfig);
+  }
+
+  /**
+   * 系统深浅色同步：应用色板（AppStorage）→ 气泡面板（setDarkHost）→ 状态栏图标色。
+   * 组件通过 @StorageProp(Theme.KEY_DARK_MODE) 感知变化并自动重绘。
+   */
+  private syncColorMode(config: Configuration): void {
+    const dark: boolean = config.colorMode === ConfigurationConstant.ColorMode.COLOR_MODE_DARK;
+    AppStorage.setOrCreate(Theme.KEY_DARK_MODE, dark);
+    BubbleBridge.setDarkHost(dark);
+    this.applySystemBarColor(dark);
+  }
+
+  /** 状态栏/导航栏图标色随深浅色切换，保证在页面底色上始终可见 */
+  private applySystemBarColor(dark: boolean): void {
+    if (this.mainWindow === undefined) {
+      return;
+    }
+    const c: string = dark ? '#E9EBF7' : '#141626';
+    this.mainWindow.setWindowSystemBarProperties({
+      statusBarContentColor: c,
+      navigationBarContentColor: c
+    }).catch((e: BusinessError) => {
+      hilog.warn(DOMAIN, TAG, `system bar failed ${e.code}`);
+    });
   }
 
   async onWindowStageCreate(windowStage: window.WindowStage): Promise<void> {
@@ -123,6 +157,7 @@ export default class EntryAbility extends UIAbility {
   private applyImmersive(windowStage: window.WindowStage): void {
     try {
       const win: window.Window = windowStage.getMainWindowSync();
+      this.mainWindow = win;
       win.setWindowLayoutFullScreen(true).catch((e: BusinessError) => {
         hilog.warn(DOMAIN, TAG, `fullscreen failed ${e.code}`);
       });
@@ -130,12 +165,7 @@ export default class EntryAbility extends UIAbility {
       const bottom: window.AvoidArea = win.getWindowAvoidArea(window.AvoidAreaType.TYPE_NAVIGATION_INDICATOR);
       AppStorage.setOrCreate('topInset', px2vp(top.topRect.height));
       AppStorage.setOrCreate('bottomInset', px2vp(bottom.bottomRect.height));
-      win.setWindowSystemBarProperties({
-        statusBarContentColor: '#141626',
-        navigationBarContentColor: '#141626'
-      }).catch((e: BusinessError) => {
-        hilog.warn(DOMAIN, TAG, `system bar failed ${e.code}`);
-      });
+      this.applySystemBarColor(Theme.isDark());
       win.on('avoidAreaChange', (data: window.AvoidAreaOptions) => {
         if (data.type === window.AvoidAreaType.TYPE_SYSTEM) {
           AppStorage.setOrCreate('topInset', px2vp(data.area.topRect.height));

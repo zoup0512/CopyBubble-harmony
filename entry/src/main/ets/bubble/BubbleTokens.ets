@@ -88,7 +88,9 @@ export class BubbleColor {
   static readonly PANEL_BG_DARK: string = '#E0161B36';
   static readonly PANEL_TEXT: string = '#242A48';
   static readonly PANEL_TEXT_DARK: string = '#DCE1F2';
-  static readonly PANEL_SUB: string = '#8A93B2';
+  /** 次级文字：浅色面板用深灰、深色面板用浅灰，各自保证对比度 */
+  static readonly PANEL_SUB_LIGHT: string = '#6F7699';
+  static readonly PANEL_SUB_DARK: string = '#9AA4C8';
   /** 选中行背景（浅色面板） */
   static readonly PANEL_ROW_SEL_LIGHT: string = '#295B6CF6';
   /** 选中行背景（深色面板） */

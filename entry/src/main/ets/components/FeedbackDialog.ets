@@ -8,6 +8,8 @@ import { I18n } from '../common/I18n';
  */
 @Component
 export struct FeedbackDialog {
+  // 系统深浅色切换时重绘（Theme 色板按此取色）
+  @StorageProp(Theme.KEY_DARK_MODE) darkMode: boolean = false;
   onLater: () => void = () => {};
   onRate: () => void = () => {};
 

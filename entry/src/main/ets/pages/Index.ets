@@ -8,6 +8,8 @@ import { SettingsPage } from './SettingsPage';
 @Component
 struct Index {
   @Provide('nav') pathStack: NavPathStack = new NavPathStack();
+  // 系统深浅色切换时重绘（Theme 色板按此取色）
+  @StorageProp(Theme.KEY_DARK_MODE) darkMode: boolean = false;
 
   @Builder
   PageMap(name: string, param: object) {

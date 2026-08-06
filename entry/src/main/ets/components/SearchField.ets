@@ -5,6 +5,8 @@ import { I18n } from '../common/I18n';
 export struct SearchField {
   @Link keyword: string;
   @State private focused: boolean = false;
+  // 系统深浅色切换时重绘（Theme 色板按此取色）
+  @StorageProp(Theme.KEY_DARK_MODE) darkMode: boolean = false;
   private controller: TextInputController = new TextInputController();
   private placeholder: string = I18n.t('search_placeholder');
 

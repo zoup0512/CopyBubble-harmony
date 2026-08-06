@@ -20,6 +20,8 @@ const DOMAIN: number = 0x1001;
 export struct DetailPage {
   @Consume('nav') pathStack: NavPathStack;
   @StorageLink('topInset') topInset: number = 0;
+  // 系统深浅色切换时重绘（Theme 色板按此取色）
+  @StorageProp(Theme.KEY_DARK_MODE) darkMode: boolean = false;
   itemId: string = '';
 
   @State private item: ClipItem | null = null;
@@ -142,8 +144,9 @@ export struct DetailPage {
           TextArea({ text: this.draft })
             .fontSize(15)
             .lineHeight(24)
+            .fontColor(Theme.TEXT_1)
             .constraintSize({ minHeight: 160 })
-            .backgroundColor('#F5F5FA')
+            .backgroundColor(Theme.INPUT_BG)
             .borderRadius(12)
             .padding(12)
             .onChange((v: string) => { this.draft = v; })
@@ -270,7 +273,7 @@ export struct DetailPage {
       .width('100%')
       .textAlign(TextAlign.Center)
       .padding({ top: 14, bottom: 14 })
-      .backgroundColor('#FDECEC')
+      .backgroundColor(Theme.DANGER_CHIP_BG)
       .borderRadius(16)
       .margin({ top: 6 })
       .onClick(() => this.confirmDelete())

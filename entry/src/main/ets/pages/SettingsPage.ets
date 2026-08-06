@@ -18,6 +18,8 @@ export struct SettingsPage {
   // @StorageLink 绑 AppKeys.BUBBLE_RUNNING：气泡内拨开关关闭时写 AppStorage，
   // 设置页能实时收到 OFF；落盘值在 aboutToAppear 里灌进 AppStorage 作为初值。
   @StorageLink(AppKeys.BUBBLE_RUNNING) floatBubble: boolean = false;
+  // 系统深浅色切换时重绘（Theme 色板按此取色）
+  @StorageProp(Theme.KEY_DARK_MODE) darkMode: boolean = false;
   @State private dedupe: boolean = true;
   @State private haptic: boolean = true;
   @State private maxRecords: number = Const.DEFAULT_MAX;
@@ -146,7 +148,7 @@ export struct SettingsPage {
             .layoutWeight(1)
             .textAlign(TextAlign.Center)
             .padding({ top: 10, bottom: 10 })
-            .backgroundColor(this.maxRecords === n ? Theme.BRAND : '#F2F2F8')
+            .backgroundColor(this.maxRecords === n ? Theme.BRAND : Theme.CHIP_UNSEL_BG)
             .borderRadius(12)
             .onClick(() => {
               this.maxRecords = n;

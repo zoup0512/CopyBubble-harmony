@@ -16,6 +16,8 @@ export struct BubbleCard {
   onOpen: (item: ClipItem) => void = () => {};
 
   @State private pressed: boolean = false;
+  // 系统深浅色切换时重绘（Theme 色板按此取色）
+  @StorageProp(Theme.KEY_DARK_MODE) darkMode: boolean = false;
 
   build() {
     Column({ space: 10 }) {
@@ -73,7 +75,7 @@ export struct BubbleCard {
           .fontWeight(FontWeight.Medium)
           .fontColor(Theme.PIN)
           .padding({ left: 8, right: 8, top: 3, bottom: 3 })
-          .backgroundColor('#FDF3E0')
+          .backgroundColor(Theme.PIN_CHIP_BG)
           .borderRadius(Theme.RADIUS_CHIP)
       }
 
@@ -121,7 +123,7 @@ export struct BubbleCard {
         .fontColor(this.item.pinned ? Theme.PIN : Theme.TEXT_2)
         .padding({ left: 12, right: 12, top: 6, bottom: 6 })
         .borderRadius(Theme.RADIUS_CHIP)
-        .backgroundColor('#F5F5FA')
+        .backgroundColor(Theme.INPUT_BG)
         .onClick(() => this.onPin(this.item))
 
       Text(I18n.t('copy_action'))
@@ -130,7 +132,7 @@ export struct BubbleCard {
         .fontColor(Theme.BRAND)
         .padding({ left: 12, right: 12, top: 6, bottom: 6 })
         .borderRadius(Theme.RADIUS_CHIP)
-        .backgroundColor('#ECEEFF')
+        .backgroundColor(Theme.CHIP_ACCENT_BG)
         .onClick(() => this.onCopy(this.item))
     }
     .width('100%')
