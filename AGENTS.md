@@ -6,7 +6,7 @@ Clipboard manager with a draggable floating bubble. Built with ArkTS/ArkUI for H
 
 This project is normally built inside **DevEco Studio** (6.1+) via Build > Build HAP(s).
 
-- SDK: HarmonyOS 6.1.1(24)
+- SDK: HarmonyOS 6.1.0(23)
 - `build-profile.json5` contains signing config (debug)
 
 No `hvigorw` wrapper is committed, but the one shipped with DevEco Studio works for a

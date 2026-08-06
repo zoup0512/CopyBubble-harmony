@@ -4,7 +4,7 @@ HarmonyOS 剪贴板管理器。把每次复制的内容归档成一条条「气�
 
 - **bundleName**：`com.razor.tools.copybubble`
 - **版本**：1.0.0（versionCode `1000000`）
-- **SDK**：compile / target / compatible 均为 `6.1.1(24)`（HarmonyOS 6.1）
+- **SDK**：compile / target / compatible 均为 `6.1.0(23)`（HarmonyOS 6.1）
 - **模型**：Stage 模型 / ArkTS 声明式 UI
 - **设备**：phone
 - **License**：Apache-2.0
