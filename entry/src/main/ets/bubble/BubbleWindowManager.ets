@@ -56,8 +56,33 @@ export class BubbleWindowManager {
 
   /** 屏幕逻辑尺寸，vp */
   screenSizeVp(): Rect {
-    const d: display.Display = display.getDefaultDisplaySync();
-    return { x: 0, y: 0, w: px2vp(d.width), h: px2vp(d.height) };
+    try {
+      const d: display.Display = display.getDefaultDisplaySync();
+      return { x: 0, y: 0, w: this.px2vp(d.width), h: this.px2vp(d.height) };
+    } catch (e) {
+      const err: BusinessError = e as BusinessError;
+      hilog.warn(DOMAIN, TAG, `screenSizeVp failed ${err.code} ${err.message}`);
+      return { x: 0, y: 0, w: 360, h: 780 };
+    }
+  }
+
+  /** 屏幕像素密度。查询失败回退 1，保证窗口仍能创建。 */
+  private static density(): number {
+    try {
+      return display.getDefaultDisplaySync().densityPixels;
+    } catch (e) {
+      const err: BusinessError = e as BusinessError;
+      hilog.warn(DOMAIN, TAG, `density query failed ${err.code} ${err.message}`);
+      return 1;
+    }
+  }
+
+  private px2vp(px: number): number {
+    return px / BubbleWindowManager.density();
+  }
+
+  private vp2px(vp: number): number {
+    return vp * BubbleWindowManager.density();
   }
 
   async create(ctx: common.UIAbilityContext): Promise<void> {
@@ -93,8 +118,8 @@ export class BubbleWindowManager {
       // 不可聚焦：避免触摸触发焦点/高亮级联导致桌面闪（见 setWindowFocusable 说明）。
       await vw.setWindowFocusable(false);
       // 视觉层铺满全屏一次，之后永不 resize
-      await vw.moveWindowTo(vp2px(s.x), vp2px(s.y));
-      await vw.resize(vp2px(s.w), vp2px(s.h));
+      await vw.moveWindowTo(this.vp2px(s.x), this.vp2px(s.y));
+      await vw.resize(this.vp2px(s.w), this.vp2px(s.h));
       await vw.showWindow();
 
       // ---- 交互层：112×112、可触摸、跟随气泡 ----
@@ -111,8 +136,8 @@ export class BubbleWindowManager {
       // 气泡在窗口内用 .position() 移动（ArkUI 原生渲染，无 WMS 异步振荡），
       // 只在气泡接近窗口边缘时才 moveWindowTo 重新居中/顶出——从每帧 60+ 次降到
       // 整个拖拽过程数次，消除高频 moveWindowTo 振荡。
-      await tw.resize(vp2px(BubbleSize.TOUCH_WIN), vp2px(BubbleSize.TOUCH_WIN));
-      await tw.moveWindowTo(vp2px(s.w), vp2px(0));
+      await tw.resize(this.vp2px(BubbleSize.TOUCH_WIN), this.vp2px(BubbleSize.TOUCH_WIN));
+      await tw.moveWindowTo(this.vp2px(s.w), this.vp2px(0));
       await tw.setUIContent('pages/BubbleTouchPage');
       tw.setWindowBackgroundColor('#00000000');
       await tw.setWindowLayoutFullScreen(false);
@@ -156,7 +181,7 @@ export class BubbleWindowManager {
   private async doMoveTouch(win: window.Window, x: number, y: number): Promise<void> {
     this.touchMoving = true;
     try {
-      await win.moveWindowTo(vp2px(x), vp2px(y));
+      await win.moveWindowTo(this.vp2px(x), this.vp2px(y));
     } catch (e) {
       const err: BusinessError = e as BusinessError;
       hilog.error(DOMAIN, TAG, `moveTouchWindow failed ${err.code} ${err.message}`);
@@ -190,11 +215,16 @@ export class BubbleWindowManager {
 
   async show(): Promise<void> {
     if (this.viewWin && !this.shown) {
-      await this.viewWin.showWindow();
-      if (this.touchWin) {
-        await this.touchWin.showWindow();
+      try {
+        await this.viewWin.showWindow();
+        if (this.touchWin) {
+          await this.touchWin.showWindow();
+        }
+        this.shown = true;
+      } catch (e) {
+        const err: BusinessError = e as BusinessError;
+        hilog.error(DOMAIN, TAG, `show failed ${err.code} ${err.message}`);
       }
-      this.shown = true;
     }
   }
 

@@ -208,7 +208,7 @@ export struct FloatBubble {
     // 动画期间主动写 sigX/sigY 同步给交互层，置 syncingToTouch 阻止 onBubblePos
     // 回写 this.x（否则动画值与信号值互相覆盖 = 闪烁）。动画结束后复位。
     this.syncingToTouch = true;
-    animateTo({
+    this.getUIContext().animateTo({
       curve: curves.interpolatingSpring(
         BubbleMotion.SPRING_VELOCITY, BubbleMotion.SPRING_MASS,
         BubbleMotion.SPRING_STIFFNESS, BubbleMotion.SPRING_DAMPING)
@@ -252,7 +252,7 @@ export struct FloatBubble {
   }
 
   private hideBubble(): void {
-    animateTo({
+    this.getUIContext().animateTo({
       duration: BubbleMotion.DISMISS_DURATION,
       curve: curves.springMotion(0.3, 0.9)
     }, () => {

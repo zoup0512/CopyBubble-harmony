@@ -163,14 +163,14 @@ export default class EntryAbility extends UIAbility {
       });
       const top: window.AvoidArea = win.getWindowAvoidArea(window.AvoidAreaType.TYPE_SYSTEM);
       const bottom: window.AvoidArea = win.getWindowAvoidArea(window.AvoidAreaType.TYPE_NAVIGATION_INDICATOR);
-      AppStorage.setOrCreate('topInset', px2vp(top.topRect.height));
-      AppStorage.setOrCreate('bottomInset', px2vp(bottom.bottomRect.height));
+      AppStorage.setOrCreate('topInset', win.getUIContext().px2vp(top.topRect.height));
+      AppStorage.setOrCreate('bottomInset', win.getUIContext().px2vp(bottom.bottomRect.height));
       this.applySystemBarColor(Theme.isDark());
       win.on('avoidAreaChange', (data: window.AvoidAreaOptions) => {
         if (data.type === window.AvoidAreaType.TYPE_SYSTEM) {
-          AppStorage.setOrCreate('topInset', px2vp(data.area.topRect.height));
+          AppStorage.setOrCreate('topInset', win.getUIContext().px2vp(data.area.topRect.height));
         } else if (data.type === window.AvoidAreaType.TYPE_NAVIGATION_INDICATOR) {
-          AppStorage.setOrCreate('bottomInset', px2vp(data.area.bottomRect.height));
+          AppStorage.setOrCreate('bottomInset', win.getUIContext().px2vp(data.area.bottomRect.height));
         }
       });
     } catch (e) {

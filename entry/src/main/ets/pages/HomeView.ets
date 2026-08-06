@@ -1,4 +1,3 @@
-import { promptAction } from '@kit.ArkUI';
 import { bundleManager, common, Want } from '@kit.AbilityKit';
 import { BusinessError } from '@kit.BasicServicesKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
@@ -183,7 +182,12 @@ export struct HomeView {
   }
 
   private toast(msg: string): void {
-    promptAction.showToast({ message: msg, duration: 1600, bottom: 120 });
+    try {
+      this.getUIContext().getPromptAction().showToast({ message: msg, duration: 1600, bottom: 120 });
+    } catch (e) {
+      const err: BusinessError = e as BusinessError;
+      hilog.warn(DOMAIN, TAG, `toast failed ${err.code}`);
+    }
   }
 
   // ---------- UI ----------

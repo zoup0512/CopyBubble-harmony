@@ -91,7 +91,7 @@ struct BubbleTouchPage {
     }
     this.pulseScale = 1;
     this.pulseAlpha = 0.9;
-    animateTo({ duration: BubbleMotion.PULSE_DURATION, curve: Curve.EaseOut }, () => {
+    this.getUIContext().animateTo({ duration: BubbleMotion.PULSE_DURATION, curve: Curve.EaseOut }, () => {
       this.pulseScale = BubbleMotion.SCALE_PULSE_TO;
       this.pulseAlpha = 0;
     });

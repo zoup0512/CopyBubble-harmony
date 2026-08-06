@@ -6,7 +6,7 @@
  * 不 import 你项目里的任何模块。
  */
 
-import { promptAction, window } from '@kit.ArkUI';
+import { window } from '@kit.ArkUI';
 import { BusinessError } from '@kit.BasicServicesKit';
 import { FloatBubble } from '../bubble/FloatBubble';
 import { BubbleWindowManager } from '../bubble/BubbleWindowManager';
@@ -64,10 +64,10 @@ struct BubbleWindowPage {
    */
   private watchKeyboard(): void {
     try {
-      window.getLastWindow(getContext(this)).then((win: window.Window) => {
+      window.getLastWindow(this.getUIContext().getHostContext()).then((win: window.Window) => {
         this.keyboardWin = win;
         win.on('keyboardHeightChange', (h: number) => {
-          this.keyboardH = px2vp(h);
+          this.keyboardH = this.getUIContext().px2vp(h);
         });
       }).catch((e: BusinessError) => {
         console.error(`CopyBubble keyboard watch failed ${e.code}`);
@@ -96,7 +96,12 @@ struct BubbleWindowPage {
         },
         onPick: (item: ClipItem) => {
           BubbleBridge.hooks.onPick(item);
-          promptAction.showToast({ message: I18n.t('toast_copied_short'), duration: 1500 });
+          try {
+            this.getUIContext().getPromptAction().showToast({ message: I18n.t('toast_copied_short'), duration: 1500 });
+          } catch (e) {
+            const err: BusinessError = e as BusinessError;
+            console.warn(`CopyBubble toast failed ${err.code}`);
+          }
         },
         onHidden: () => {
           BubbleBridge.hooks.onHidden();

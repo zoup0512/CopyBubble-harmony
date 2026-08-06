@@ -104,13 +104,26 @@ export class BubbleWindow {
     }
   }
 
+  /** 屏幕像素密度。查询失败回退 1。 */
+  private static density(): number {
+    try {
+      return display.getDefaultDisplaySync().densityPixels;
+    } catch {
+      return 1;
+    }
+  }
+
+  private static vp2px(vp: number): number {
+    return vp * BubbleWindow.density();
+  }
+
   /** 把左上角 x 约束在屏内（窗口宽 w）。屏幕尺寸取不到时原样返回。 */
   private static clampX(x: number, w: number): number {
     const sw: number = BubbleWindow.screenWidth();
     if (sw === 0) {
       return x;
     }
-    const m: number = vp2px(MARGIN_VP);
+    const m: number = BubbleWindow.vp2px(MARGIN_VP);
     const maxX: number = Math.max(m, sw - w - m);
     return Math.min(Math.max(x, m), maxX);
   }
@@ -121,7 +134,7 @@ export class BubbleWindow {
     if (sh === 0) {
       return y;
     }
-    const m: number = vp2px(MARGIN_VP);
+    const m: number = BubbleWindow.vp2px(MARGIN_VP);
     const maxY: number = Math.max(m, sh - h - m);
     return Math.min(Math.max(y, m), maxY);
   }
@@ -145,10 +158,10 @@ export class BubbleWindow {
       };
       const win: window.Window = await window.createWindow(config);
       // 默认贴右、略靠上，保证收起态的气泡就在屏内
-      const side: number = vp2px(64); // 与 BubbleFloat 的 COLLAPSED 对齐
+      const side: number = BubbleWindow.vp2px(64); // 与 BubbleFloat 的 COLLAPSED 对齐
       const sw: number = BubbleWindow.screenWidth();
-      const startX: number = sw > 0 ? sw - side - vp2px(MARGIN_VP) : vp2px(300);
-      const startY: number = vp2px(DEFAULT_TOP_VP);
+      const startX: number = sw > 0 ? sw - side - BubbleWindow.vp2px(MARGIN_VP) : BubbleWindow.vp2px(300);
+      const startY: number = BubbleWindow.vp2px(DEFAULT_TOP_VP);
       const px: number = BubbleWindow.clampX(startX, side);
       const py: number = BubbleWindow.clampY(startY, side);
       BubbleWindow.w = side;

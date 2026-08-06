@@ -221,6 +221,16 @@ export struct SettingsPage {
 
   // ---------- 行为 ----------
 
+  /** 轻提示：走 UIContext 避免弃用告警，失败静默降级 */
+  private toast(msg: string): void {
+    try {
+      this.getUIContext().getPromptAction().showToast({ message: msg });
+    } catch (e) {
+      const err: BusinessError = e as BusinessError;
+      console.warn(`CopyBubble/Settings toast failed ${err.code}`);
+    }
+  }
+
   private setBool(key: string, v: boolean): void {
     if (key === Const.KEY_DEDUPE) {
       this.dedupe = v;
@@ -246,10 +256,7 @@ export struct SettingsPage {
     if (!granted) {
       this.floatBubble = false;
       await this.sm.put(Const.KEY_FLOAT_BUBBLE, false);
-      promptAction.showToast({
-        message: I18n.t('float_permission_denied'),
-        duration: 2400
-      });
+      this.toast(I18n.t('float_permission_denied'));
       return;
     }
     await BubbleWindowManager.get().create(ctx);
@@ -258,32 +265,34 @@ export struct SettingsPage {
     this.floatBubble = ok;
     await this.sm.put(Const.KEY_FLOAT_BUBBLE, ok);
     if (!ok) {
-      promptAction.showToast({
-        message: I18n.t('float_permission_denied'),
-        duration: 2400
-      });
+      this.toast(I18n.t('float_permission_denied'));
     }
   }
 
   private confirmClear(all: boolean): void {
-    promptAction.showDialog({
-      title: all ? I18n.t('clear_all') : I18n.t('clear_unpinned'),
-      message: all ? I18n.t('clear_all_msg') : I18n.t('clear_unpinned_msg'),
-      buttons: [
-        { text: I18n.t('btn_cancel'), color: Theme.TEXT_2 },
-        { text: I18n.t('btn_clear'), color: Theme.DANGER }
-      ]
-    }).then(async (res: promptAction.ShowDialogSuccessResponse) => {
-      if (res.index !== 1) {
-        return;
-      }
-      if (all) {
-        await this.store.clearAll();
-        promptAction.showToast({ message: I18n.t('toast_cleared') });
-      } else {
-        const n: number = await this.store.clearUnpinned();
-        promptAction.showToast({ message: I18n.f('toast_deleted_n', `${n}`) });
-      }
-    });
+    try {
+      this.getUIContext().getPromptAction().showDialog({
+        title: all ? I18n.t('clear_all') : I18n.t('clear_unpinned'),
+        message: all ? I18n.t('clear_all_msg') : I18n.t('clear_unpinned_msg'),
+        buttons: [
+          { text: I18n.t('btn_cancel'), color: Theme.TEXT_2 },
+          { text: I18n.t('btn_clear'), color: Theme.DANGER }
+        ]
+      }).then(async (res: promptAction.ShowDialogSuccessResponse) => {
+        if (res.index !== 1) {
+          return;
+        }
+        if (all) {
+          await this.store.clearAll();
+          this.toast(I18n.t('toast_cleared'));
+        } else {
+          const n: number = await this.store.clearUnpinned();
+          this.toast(I18n.f('toast_deleted_n', `${n}`));
+        }
+      });
+    } catch (e) {
+      const err: BusinessError = e as BusinessError;
+      console.warn(`CopyBubble/Settings confirmClear failed ${err.code}`);
+    }
   }
 }

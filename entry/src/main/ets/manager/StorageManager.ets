@@ -43,21 +43,39 @@ export class StorageManager {
     if (this.store === null) {
       return def;
     }
-    return this.store.getSync(key, def) as string;
+    try {
+      return this.store.getSync(key, def) as string;
+    } catch (e) {
+      const err: BusinessError = e as BusinessError;
+      hilog.warn(DOMAIN, TAG, `getString ${key} failed ${err.code} ${err.message}`);
+      return def;
+    }
   }
 
   getBool(key: string, def: boolean): boolean {
     if (this.store === null) {
       return def;
     }
-    return this.store.getSync(key, def) as boolean;
+    try {
+      return this.store.getSync(key, def) as boolean;
+    } catch (e) {
+      const err: BusinessError = e as BusinessError;
+      hilog.warn(DOMAIN, TAG, `getBool ${key} failed ${err.code} ${err.message}`);
+      return def;
+    }
   }
 
   getNumber(key: string, def: number): number {
     if (this.store === null) {
       return def;
     }
-    return this.store.getSync(key, def) as number;
+    try {
+      return this.store.getSync(key, def) as number;
+    } catch (e) {
+      const err: BusinessError = e as BusinessError;
+      hilog.warn(DOMAIN, TAG, `getNumber ${key} failed ${err.code} ${err.message}`);
+      return def;
+    }
   }
 
   async put(key: string, value: string | boolean | number): Promise<void> {
@@ -77,7 +95,12 @@ export class StorageManager {
     if (this.store === null) {
       return;
     }
-    await this.store.clear();
-    await this.store.flush();
+    try {
+      await this.store.clear();
+      await this.store.flush();
+    } catch (e) {
+      const err: BusinessError = e as BusinessError;
+      hilog.error(DOMAIN, TAG, `clearAll failed ${err.code} ${err.message}`);
+    }
   }
 }

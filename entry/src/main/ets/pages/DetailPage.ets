@@ -281,6 +281,16 @@ export struct DetailPage {
 
   // ---------- 行为 ----------
 
+  /** 轻提示：走 UIContext 避免弃用告警，失败静默降级 */
+  private toast(msg: string): void {
+    try {
+      this.getUIContext().getPromptAction().showToast({ message: msg });
+    } catch (e) {
+      const err: BusinessError = e as BusinessError;
+      hilog.warn(DOMAIN, TAG, `toast failed ${err.code}`);
+    }
+  }
+
   private async toggleEdit(): Promise<void> {
     if (this.editing) {
       if (this.item !== null && this.draft.trim().length > 0) {
@@ -288,7 +298,7 @@ export struct DetailPage {
         this.item = this.store.getById(this.itemId);
       }
       this.editing = false;
-      promptAction.showToast({ message: I18n.t('toast_saved') });
+      this.toast(I18n.t('toast_saved'));
     } else {
       this.editing = true;
     }
@@ -331,23 +341,23 @@ export struct DetailPage {
 
   private async copyText(text: string): Promise<void> {
     if (text.length === 0) {
-      promptAction.showToast({ message: I18n.t('toast_no_copy_content') });
+      this.toast(I18n.t('toast_no_copy_content'));
       return;
     }
     const ok: boolean = await ClipboardKit.write(text);
-    promptAction.showToast({ message: ok ? I18n.t('toast_copied') : I18n.t('toast_copy_failed') });
+    this.toast(ok ? I18n.t('toast_copied') : I18n.t('toast_copy_failed'));
   }
 
   private openUri(uri: string): void {
     if (uri.length === 0) {
-      promptAction.showToast({ message: I18n.t('toast_no_uri') });
+      this.toast(I18n.t('toast_no_uri'));
       return;
     }
     const ctx: common.UIAbilityContext = this.getUIContext().getHostContext() as common.UIAbilityContext;
     const want: Want = { action: 'ohos.want.action.viewData', uri: uri };
     ctx.startAbility(want).catch((e: BusinessError) => {
       hilog.error(DOMAIN, TAG, `startAbility failed ${e.code}`);
-      promptAction.showToast({ message: I18n.t('toast_no_app_open') });
+      this.toast(I18n.t('toast_no_app_open'));
     });
   }
 
@@ -369,23 +379,28 @@ export struct DetailPage {
     } catch (e) {
       const err: BusinessError = e as BusinessError;
       hilog.error(DOMAIN, TAG, `share failed ${err.code}`);
-      promptAction.showToast({ message: I18n.t('toast_share_failed') });
+      this.toast(I18n.t('toast_share_failed'));
     }
   }
 
   private confirmDelete(): void {
-    promptAction.showDialog({
-      title: I18n.t('delete_record'),
-      message: I18n.t('delete_confirm_msg'),
-      buttons: [
-        { text: I18n.t('btn_cancel'), color: Theme.TEXT_2 },
-        { text: I18n.t('btn_delete'), color: Theme.DANGER }
-      ]
-    }).then(async (res: promptAction.ShowDialogSuccessResponse) => {
-      if (res.index === 1 && this.item !== null) {
-        await this.store.remove(this.item.id);
-        this.pathStack.pop();
-      }
-    });
+    try {
+      this.getUIContext().getPromptAction().showDialog({
+        title: I18n.t('delete_record'),
+        message: I18n.t('delete_confirm_msg'),
+        buttons: [
+          { text: I18n.t('btn_cancel'), color: Theme.TEXT_2 },
+          { text: I18n.t('btn_delete'), color: Theme.DANGER }
+        ]
+      }).then(async (res: promptAction.ShowDialogSuccessResponse) => {
+        if (res.index === 1 && this.item !== null) {
+          await this.store.remove(this.item.id);
+          this.pathStack.pop();
+        }
+      });
+    } catch (e) {
+      const err: BusinessError = e as BusinessError;
+      hilog.warn(DOMAIN, TAG, `confirmDelete failed ${err.code}`);
+    }
   }
 }
